@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+# 环境变量（真实密码/密钥不进仓库）
+.env
+# SQLite 数据文件
+*.db
+*.db-journal
+# 系统
+.DS_Store

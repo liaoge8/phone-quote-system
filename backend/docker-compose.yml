@@ -1,0 +1,41 @@
+# 本地一键启动（默认 SQLite，无需外部数据库）
+services:
+  api:
+    build: .
+    container_name: phone-quote-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # 默认 SQLite；如需 PostgreSQL，改成下面的连接串并取消 postgres 服务注释
+      - DATABASE_URL=sqlite:///./data.db
+    volumes:
+      # 持久化 SQLite 数据文件
+      - ./data:/code/data
+    restart: unless-stopped
+
+  # ---- 可选：PostgreSQL（生产建议）----
+  # 取消注释后，把 api 的 DATABASE_URL 改为：
+  # postgresql+psycopg2://quote:quote@postgres:5432/phone_quote
+  # 并在 requirements.txt 中加入 psycopg2-binary
+  #
+  # postgres:
+  #   image: postgres:16
+  #   container_name: phone-quote-postgres
+  #   environment:
+  #     POSTGRES_USER: quote
+  #     POSTGRES_PASSWORD: quote
+  #     POSTGRES_DB: phone_quote
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+  # ---- 可选：Redis（后续做缓存 / 任务队列用）----
+  # redis:
+  #   image: redis:7
+  #   container_name: phone-quote-redis
+  #   restart: unless-stopped
+
+# volumes:
+#   pgdata:
