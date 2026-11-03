@@ -9,6 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
+# 前端页面（与后端同源，免跨域）
+COPY static ./static
+
 # 默认用 SQLite，数据文件落在 /code/data
 ENV DATABASE_URL=sqlite:///./data.db
 
