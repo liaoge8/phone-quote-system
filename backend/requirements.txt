@@ -8,3 +8,4 @@ python-jose[cryptography]>=3.3
 apscheduler>=3.10
 httpx>=0.27
 python-multipart>=0.0.9
+psycopg2-binary>=2.9  # PostgreSQL 驱动（用远程 PG 时需要）

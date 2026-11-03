@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     # 数据库连接串：默认 SQLite；生产可切 PostgreSQL
     DATABASE_URL: str = "sqlite:///./data.db"
 
-    # 大模型：OpenAI 兼容接口，默认 DeepSeek
+    # 大模型：OpenAI 接口（客户端走 OpenAI 兼容的 /chat/completions，换其他兼容服务只需改 BASE_URL/MODEL）
     LLM_API_KEY: str = ""
-    LLM_BASE_URL: str = "https://api.deepseek.com"
-    LLM_MODEL: str = "deepseek-chat"
+    LLM_BASE_URL: str = "https://api.openai.com"
+    LLM_MODEL: str = "gpt-4o-mini"
 
 
 settings = Settings()

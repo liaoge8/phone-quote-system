@@ -11,7 +11,7 @@ FastAPI + SQLAlchemy 2.0 + Pydantic v2，默认 SQLite，开箱即用。
 - 国补计算：官网价 > 6000 不可享；否则补贴 = min(官网价 × 15%, 500)
 - 入网台账 CRUD（情报中心置顶用）
 - 销量存档 + 两月同比/环比对比
-- 爬虫骨架（TENAA 占位）、APScheduler 每日 02:00 定时任务、LLM 客户端（DeepSeek 兼容接口）
+- 爬虫骨架（TENAA 占位）、APScheduler 每日 02:00 定时任务、LLM 客户端（OpenAI 接口）
 
 ## 本地运行
 
@@ -38,12 +38,24 @@ cd backend
 docker compose up --build -d
 ```
 
-## 切 PostgreSQL
+## 接远程 PostgreSQL
 
-1. `pip install psycopg2-binary`（或写入 requirements.txt）
-2. `.env` 中设置：
-   `DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/phone_quote`
+1. 依赖已在 `requirements.txt` 中（`psycopg2-binary`），`pip install -r requirements.txt` 即可
+2. `.env` 中设置（密码含特殊字符需做 URL 编码；`sslmode=require` 保证传输加密）：
+   `DATABASE_URL=postgresql+psycopg2://用户名:密码@远程主机:5432/phone_quote?sslmode=require`
 3. 重启服务（`init_db` 会自动建表）
+
+### 数据安全注意事项
+
+- `.env` 已在 `.gitignore` 中，**不要**把数据库密码、SECRET_KEY、LLM key 提交到仓库
+- 生产环境务必更换 `SECRET_KEY` 为随机长字符串
+- 远程库建议：只对应用服务器 IP 开放防火墙；定期 `pg_dump` 备份（例如每天凌晨备份一次，保留 30 天）
+- 连接层已开 `pool_pre_ping`，远程连接断开后自动重连
+
+## 大模型（OpenAI）
+
+`.env` 中设置 `LLM_API_KEY`（从 OpenAI 后台获取）、`LLM_MODEL`（默认 `gpt-4o-mini`，解读类任务性价比高）。
+模型只做"解读"（吃瓜栏目分析、政策解释辅助、竞品对比结论），不编价格数字。
 
 ## 目录结构
 

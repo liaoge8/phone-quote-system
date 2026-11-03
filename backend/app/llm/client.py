@@ -1,4 +1,4 @@
-"""大模型客户端：OpenAI 兼容接口封装（默认 DeepSeek）。
+"""大模型客户端：OpenAI 接口封装（/chat/completions；换其他 OpenAI 兼容服务只需改 BASE_URL/MODEL）。
 
 用途（用户已确认）：模型只做"解读"，不编数字——
 1. 吃瓜栏目：厂商高管动态下方的分析解读文字；
