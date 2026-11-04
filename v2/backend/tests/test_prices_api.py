@@ -92,7 +92,7 @@ def test_price_value_has_no_update_or_delete_endpoint(client):
     record_id = created.json()["id"]
     assert client.put(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 404
     assert client.patch(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 404
-    assert client.delete(f"/api/prices/{record_id}", headers=headers).status_code == 405
+    assert client.delete(f"/api/prices/{record_id}", headers=headers).status_code == 404
 
 
 def test_member_cannot_include_voided_records_and_attempt_is_audited(client):
