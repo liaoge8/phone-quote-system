@@ -9,7 +9,6 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from app.models.audit_log import AuditLog
-from app.models.price_record import PriceRecord
 from app.models.product import Product
 from app.models.user import User
 
@@ -97,7 +96,7 @@ def test_price_value_has_no_update_or_delete_endpoint(client):
 
 
 def test_member_cannot_include_voided_records_and_attempt_is_audited(client):
-    client, product_id, _admin_id, member_id = client
+    client, product_id, _admin_id, member_id, TestingSession = client
     headers = login(client, "price_member", "member-password-123")
     response = client.get(
         f"/api/products/{product_id}/prices",
@@ -106,7 +105,7 @@ def test_member_cannot_include_voided_records_and_attempt_is_audited(client):
     )
     assert response.status_code == 403
     # The route commits the denial audit before returning 403.
-    with _TestingSession() as db:
+    with TestingSession() as db:
         denied = db.query(AuditLog).filter_by(actor_id=member_id, action="denied").all()
         assert len(denied) == 1
         assert denied[0].detail == {"operation": "include_voided"}
@@ -149,7 +148,7 @@ def test_admin_void_requires_reason_and_preserves_original_record(client):
 
 
 def test_date_range_and_as_of_filters(client):
-    client, product_id, _admin_id, _member_id = client
+    client, product_id, _admin_id, _member_id, _TestingSession = client
     headers = login(client, "price_member", "member-password-123")
     first = create_price(client, headers, product_id, effective_date="2026-10-31", price="3800.00")
     second = create_price(client, headers, product_id, effective_date="2026-11-02", price="3900.00")
