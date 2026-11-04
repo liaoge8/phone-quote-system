@@ -21,7 +21,8 @@ if settings.cors_origin_list:
 
 app.include_router(auth_router, prefix="/api/auth", tags=["认证与成员"])
 app.include_router(products_router, prefix="/api/products", tags=["商品档案"])
-app.include_router(prices_router, prefix="/api", tags=["价格档案"])\napp.include_router(policies_router, prefix="/api/policies", tags=["月度政策价"])
+app.include_router(prices_router, prefix="/api", tags=["价格档案"])
+app.include_router(policies_router, prefix="/api/policies", tags=["月度政策价"])
 app.include_router(bootstrap_router, prefix="/api/bootstrap", tags=["初始化"])
 
 
