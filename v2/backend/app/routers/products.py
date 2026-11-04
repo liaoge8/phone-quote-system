@@ -18,7 +18,7 @@ router = APIRouter()
 def list_products(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     stmt = (
         select(Product)
-        .where(Product.archived_at.is_(None))
+        .where(Product.archived_at.is_(None), Product.status == "on_sale")
         .order_by(Product.id.desc())
     )
     return list(db.scalars(stmt).all())
@@ -58,7 +58,7 @@ def archive_product(
         raise HTTPException(422, "停用原因至少 5 个字")
 
     product = db.get(Product, product_id)
-    if not product or product.archived_at:
+    if not product or product.archived_at or product.status != "on_sale":
         raise HTTPException(404, "商品不存在或已停用")
 
     history_count = db.scalar(
@@ -95,7 +95,7 @@ def restore_product(
     admin: User = Depends(require_admin),
 ):
     product = db.get(Product, product_id)
-    if not product or not product.archived_at:
+    if not product or not product.archived_at or product.status != "discontinued":
         raise HTTPException(404, "商品不存在或当前未停用")
 
     previous_reason = product.archive_reason
