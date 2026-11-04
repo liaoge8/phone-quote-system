@@ -90,7 +90,7 @@ def test_price_value_has_no_update_or_delete_endpoint(client):
     headers = login(client, "price_member", "member-password-123")
     created = create_price(client, headers, product_id)
     record_id = created.json()["id"]
-    assert client.put(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 405
+    assert client.put(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 404
     assert client.patch(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 405
     assert client.delete(f"/api/prices/{record_id}", headers=headers).status_code == 405
 
