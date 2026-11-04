@@ -112,7 +112,7 @@ def test_member_cannot_access_admin_user_management(client):
     assert client.get("/api/auth/users", headers=member_headers).status_code == 403
 
 
-def test_admin_cannot_disable_last_active_admin(client):
+def test_admin_cannot_disable_own_account(client):
     admin_headers = login(client, "admin_user", "admin-password-123")
     response = client.patch(
         "/api/auth/users/1/status",
@@ -120,7 +120,7 @@ def test_admin_cannot_disable_last_active_admin(client):
         json={"is_active": False},
     )
     assert response.status_code == 400
-    assert "最后一个" in response.json()["detail"]
+    assert "当前登录" in response.json()["detail"]
 
 
 def test_user_creation_rejects_unknown_role_and_extra_fields(client):
