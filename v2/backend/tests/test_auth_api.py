@@ -110,3 +110,39 @@ def test_admin_can_create_reset_disable_and_enable_member(client):
 def test_member_cannot_access_admin_user_management(client):
     member_headers = login(client, "member_user", "member-password-123")
     assert client.get("/api/auth/users", headers=member_headers).status_code == 403
+
+
+def test_admin_cannot_disable_last_active_admin(client):
+    admin_headers = login(client, "admin_user", "admin-password-123")
+    response = client.patch(
+        "/api/auth/users/1/status",
+        headers=admin_headers,
+        json={"is_active": False},
+    )
+    assert response.status_code == 400
+    assert "最后一个" in response.json()["detail"]
+
+
+def test_user_creation_rejects_unknown_role_and_extra_fields(client):
+    admin_headers = login(client, "admin_user", "admin-password-123")
+    invalid_role = client.post(
+        "/api/auth/users",
+        headers=admin_headers,
+        json={"username": "bad_role", "password": "initial-password-123", "role": "superuser"},
+    )
+    assert invalid_role.status_code == 422
+
+    extra_field = client.post(
+        "/api/auth/users",
+        headers=admin_headers,
+        json={"username": "extra_field", "password": "initial-password-123", "role": "member", "is_active": False},
+    )
+    assert extra_field.status_code == 422
+
+
+def test_member_cannot_submit_extra_auth_fields(client):
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "member_user", "password": "member-password-123", "role": "admin"},
+    )
+    assert response.status_code == 422
