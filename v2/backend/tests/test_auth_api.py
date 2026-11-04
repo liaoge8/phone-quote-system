@@ -146,3 +146,33 @@ def test_member_cannot_submit_extra_auth_fields(client):
         json={"username": "member_user", "password": "member-password-123", "role": "admin"},
     )
     assert response.status_code == 422
+
+
+def test_member_denial_is_audited_and_audit_endpoint_is_admin_only(client):
+    member_headers = login(client, "member_user", "member-password-123")
+    denied = client.get("/api/auth/users", headers=member_headers)
+    assert denied.status_code == 403
+
+    member_audit = client.get("/api/auth/audit-logs", headers=member_headers)
+    assert member_audit.status_code == 403
+
+    admin_headers = login(client, "admin_user", "admin-password-123")
+    logs = client.get("/api/auth/audit-logs?limit=10&offset=0", headers=admin_headers)
+    assert logs.status_code == 200
+    denied_entries = [item for item in logs.json() if item["action"] == "denied"]
+    assert any(item["target_type"] == "http" and item["target_id"] == "/api/auth/users" for item in denied_entries)
+
+
+def test_audit_log_pagination_validation(client):
+    admin_headers = login(client, "admin_user", "admin-password-123")
+    assert client.get("/api/auth/audit-logs?limit=0", headers=admin_headers).status_code == 422
+    assert client.get("/api/auth/audit-logs?limit=501", headers=admin_headers).status_code == 422
+    assert client.get("/api/auth/audit-logs?offset=-1", headers=admin_headers).status_code == 422
+
+
+def test_member_list_does_not_expose_password_hash(client):
+    admin_headers = login(client, "admin_user", "admin-password-123")
+    response = client.get("/api/auth/users", headers=admin_headers)
+    assert response.status_code == 200
+    assert response.json()
+    assert all("password_hash" not in user for user in response.json())
