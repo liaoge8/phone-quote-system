@@ -153,3 +153,34 @@ def test_archive_rejects_blank_or_short_reason(product_client, reason):
         json={"reason": reason},
     )
     assert response.status_code == 422
+
+
+def test_discontinued_status_is_hidden_and_rejects_new_prices(product_client):
+    client, sessions = product_client
+    member_headers = _login(client, "product_member", "member-password-123")
+    created = client.post(
+        "/api/products",
+        headers=member_headers,
+        json={"brand": "华为", "model": "停产状态测试"},
+    )
+    product_id = created.json()["id"]
+
+    with sessions() as db:
+        product = db.get(Product, product_id)
+        product.status = "discontinued"
+        db.commit()
+
+    listed = client.get("/api/products", headers=member_headers)
+    assert all(item["id"] != product_id for item in listed.json())
+
+    response = client.post(
+        f"/api/products/{product_id}/prices",
+        headers=member_headers,
+        json={
+            "variant": "12+256",
+            "price_type": "批发价",
+            "price": "3999.00",
+            "effective_date": "2026-11-04",
+        },
+    )
+    assert response.status_code == 404
