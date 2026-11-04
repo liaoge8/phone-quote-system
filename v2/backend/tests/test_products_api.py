@@ -1,4 +1,5 @@
 import pytest
+from datetime import date
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -87,7 +88,7 @@ def test_admin_archive_preserves_price_history_and_restore(product_client):
             variant="12+256",
             price_type="批发价",
             price="3999.00",
-            effective_date="2026-11-04",
+            effective_date=date(2026, 11, 4),
             recorded_by=member.id,
         ))
         db.commit()
