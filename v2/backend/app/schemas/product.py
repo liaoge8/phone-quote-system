@@ -1,10 +1,20 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ProductCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     brand: str = Field(min_length=1, max_length=40)
     model: str = Field(min_length=1, max_length=100)
     intro: str | None = None
+
+    @field_validator("brand", "model")
+    @classmethod
+    def strip_required_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("不能为空或仅包含空格")
+        return value
 
 
 class ProductArchiveIn(BaseModel):
