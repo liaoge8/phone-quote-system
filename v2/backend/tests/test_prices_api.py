@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -45,7 +45,7 @@ def client():
         member_id = member.id
 
     with TestClient(app) as test_client:
-        yield test_client, product_id, admin_id, member_id
+        yield test_client, product_id, admin_id, member_id, TestingSession
 
     app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)
@@ -71,7 +71,7 @@ def create_price(client, headers, product_id, **overrides):
 
 
 def test_member_can_create_price_and_recorder_is_injected(client):
-    client, product_id, _admin_id, member_id = client
+    client, product_id, _admin_id, member_id, _TestingSession = client
     headers = login(client, "price_member", "member-password-123")
     response = create_price(client, headers, product_id)
     assert response.status_code == 201, response.text
@@ -80,14 +80,14 @@ def test_member_can_create_price_and_recorder_is_injected(client):
 
 
 def test_client_cannot_supply_recorded_by(client):
-    client, product_id, _admin_id, _member_id = client
+    client, product_id, _admin_id, _member_id, _TestingSession = client
     headers = login(client, "price_member", "member-password-123")
     response = create_price(client, headers, product_id, recorded_by=999)
     assert response.status_code == 422
 
 
 def test_price_value_has_no_update_or_delete_endpoint(client):
-    client, product_id, _admin_id, _member_id = client
+    client, product_id, _admin_id, _member_id, _TestingSession = client
     headers = login(client, "price_member", "member-password-123")
     created = create_price(client, headers, product_id)
     record_id = created.json()["id"]
@@ -105,15 +105,15 @@ def test_member_cannot_include_voided_records_and_attempt_is_audited(client):
         params={"include_voided": "true"},
     )
     assert response.status_code == 403
-    from app.db.session import SessionLocal
     # The route commits the denial audit before returning 403.
-    with SessionLocal() as db:
-        # Test DB is injected; inspect through a temporary request-scoped override below instead.
-        pass
+    with _TestingSession() as db:
+        denied = db.query(AuditLog).filter_by(actor_id=member_id, action="denied").all()
+        assert len(denied) == 1
+        assert denied[0].detail == {"operation": "include_voided"}
 
 
 def test_admin_void_requires_reason_and_preserves_original_record(client):
-    client, product_id, admin_id, _member_id = client
+    client, product_id, admin_id, _member_id, _TestingSession = client
     admin_headers = login(client, "price_admin", "admin-password-123")
     created = create_price(client, admin_headers, product_id)
     record_id = created.json()["id"]
