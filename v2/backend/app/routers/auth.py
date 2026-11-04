@@ -141,3 +141,30 @@ def set_user_status(
     _audit(db, admin.id, action, target.id, {"username": target.username})
     db.commit()
     return {"id": target.id, "is_active": target.is_active, "changed": True}
+
+
+@router.get("/audit-logs")
+def list_audit_logs(
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """Admin-only audit trail; records are append-only and returned newest first."""
+    if limit < 1 or limit > 500 or offset < 0:
+        raise HTTPException(422, "limit 范围为 1-500，offset 不能小于 0")
+    rows = db.scalars(
+        select(AuditLog).order_by(AuditLog.id.desc()).offset(offset).limit(limit)
+    ).all()
+    return [
+        {
+            "id": row.id,
+            "actor_id": row.actor_id,
+            "action": row.action,
+            "target_type": row.target_type,
+            "target_id": row.target_id,
+            "detail": row.detail,
+            "created_at": row.created_at,
+        }
+        for row in rows
+    ]
