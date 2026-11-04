@@ -1,11 +1,39 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+
+
 class LoginIn(BaseModel):
     username: str = Field(min_length=1, max_length=64)
     password: str = Field(min_length=1, max_length=256)
+
+
 class TokenOut(BaseModel):
     access_token: str
-    token_type: str = 'bearer'
+    token_type: str = "bearer"
+
+
 class UserCreate(BaseModel):
-    username: str = Field(min_length=3, max_length=64, pattern=r'^[a-zA-Z0-9_.-]+$')
+    username: str = Field(min_length=3, max_length=64, pattern=r"^[a-zA-Z0-9_.-]+$")
     password: str = Field(min_length=10, max_length=128)
-    role: str = 'member'
+    role: str = "member"
+
+
+class PasswordChangeIn(BaseModel):
+    old_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=10, max_length=128)
+
+
+class PasswordResetIn(BaseModel):
+    new_password: str = Field(min_length=10, max_length=128)
+
+
+class UserStatusIn(BaseModel):
+    is_active: bool
+
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    role: str
+    is_active: bool
