@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_admin
+from app.core.time import utc_now
 from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.price_record import PriceRecord
@@ -46,8 +47,7 @@ def void_price(record_id: int, reason: str, db: Session = Depends(get_db), admin
     record = db.get(PriceRecord, record_id)
     if not record or record.voided_at:
         raise HTTPException(404, '价格记录不存在或已作废')
-    from datetime import datetime, timezone
-    record.voided_at = datetime.now(timezone.utc)
+    record.voided_at = utc_now()
     record.voided_by = admin.id
     record.void_reason = reason.strip()
     db.add(AuditLog(actor_id=admin.id, action='price.voided', target_type='price_record', target_id=str(record.id), detail={'reason': reason.strip(), 'original_price': str(record.price)}))
