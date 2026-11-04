@@ -184,3 +184,36 @@ def test_discontinued_status_is_hidden_and_rejects_new_prices(product_client):
         },
     )
     assert response.status_code == 404
+
+
+def test_product_create_trims_names_and_rejects_client_managed_fields(product_client):
+    client, _ = product_client
+    headers = _login(client, "product_member", "member-password-123")
+
+    created = client.post(
+        "/api/products",
+        headers=headers,
+        json={"brand": "  华为  ", "model": "  Mate Test  "},
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["brand"] == "华为"
+    assert created.json()["model"] == "Mate Test"
+
+    rejected = client.post(
+        "/api/products",
+        headers=headers,
+        json={"brand": "小米", "model": "Test", "status": "discontinued"},
+    )
+    assert rejected.status_code == 422
+
+
+@pytest.mark.parametrize("field_value", ["", "   "])
+def test_product_create_rejects_blank_brand_or_model(product_client, field_value):
+    client, _ = product_client
+    headers = _login(client, "product_member", "member-password-123")
+    response = client.post(
+        "/api/products",
+        headers=headers,
+        json={"brand": field_value, "model": "Valid Model"},
+    )
+    assert response.status_code == 422
