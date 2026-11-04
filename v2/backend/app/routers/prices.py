@@ -1,5 +1,5 @@
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_admin
@@ -17,15 +17,19 @@ def add_price(product_id: int, body: PriceRecordCreate, db: Session = Depends(ge
         raise HTTPException(404, '商品不存在或已停用')
     record = PriceRecord(product_id=product_id, recorded_by=user.id, **body.model_dump())
     db.add(record)
-    db.commit()
-    db.refresh(record)
+    db.flush()
     db.add(AuditLog(actor_id=user.id, action='price.created', target_type='price_record', target_id=str(record.id)))
     db.commit()
+    db.refresh(record)
     return record
 @router.get('/products/{product_id}/prices', response_model=list[PriceRecordOut])
 def list_prices(product_id: int, start: date | None = None, end: date | None = None, as_of: date | None = None, include_voided: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     if start and end and start > end:
         raise HTTPException(422, '开始日期不能晚于结束日期')
+    if include_voided and user.role != 'admin':
+        db.add(AuditLog(actor_id=user.id, action='denied', target_type='price_record', target_id=str(product_id), detail={'operation': 'include_voided'}))
+        db.commit()
+        raise HTTPException(403, '无权查看作废记录')
     stmt = select(PriceRecord).where(PriceRecord.product_id == product_id)
     if not include_voided:
         stmt = stmt.where(PriceRecord.voided_at.is_(None))
