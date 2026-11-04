@@ -4,6 +4,7 @@ on:
     branches: [rebuild/v1-core]
     paths:
       - 'v2/backend/**'
+      - 'v2/frontend/**'
       - '.github/workflows/v2-backend-ci.yml'
   pull_request:
     branches: [main]
@@ -28,3 +29,7 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: mkdir -p data && alembic upgrade head
       - run: pytest -q
+      - name: Check frontend JavaScript syntax
+        run: |
+          python -c "import re; s=open('../frontend/index.html', encoding='utf-8').read(); scripts=re.findall(r'<script>(.*?)</script>', s, re.S); assert scripts, 'no inline script found'; open('/tmp/frontend.js','w',encoding='utf-8').write('\\n'.join(scripts))"
+          node --check /tmp/frontend.js
