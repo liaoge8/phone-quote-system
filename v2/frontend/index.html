@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>手机报价档案系统</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#172033;background:#f4f6fa;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,input,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:10px 14px;background:#2457d6;color:white;font-weight:600}button.secondary{background:#e8edf7;color:#25334e}button.danger{background:#b42318}button:disabled{opacity:.55;cursor:not-allowed}
+header{background:#15213a;color:#fff;padding:15px max(18px,calc((100vw - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}
+header strong{font-size:17px}.muted{color:#69758a;font-size:13px}.userline{display:flex;align-items:center;gap:10px;font-size:13px}
+main{max-width:1120px;margin:26px auto;padding:0 18px}.panel{background:#fff;border:1px solid #e3e8f0;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #17203308}
+h1{font-size:22px;margin:0 0 6px}h2{font-size:17px;margin:0 0 16px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:13px;color:#4d5a70}.field input,.field textarea{width:100%;border:1px solid #ccd5e2;border-radius:9px;padding:10px 11px;background:#fff;color:#172033}.field textarea{min-height:72px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #edf0f5;vertical-align:middle}th{font-size:12px;color:#647086;font-weight:600}.tablewrap{overflow:auto}
+.tag{display:inline-block;padding:3px 8px;border-radius:20px;background:#edf2ff;color:#3154a4;font-size:12px}
+.hidden{display:none!important}.notice{padding:10px 12px;border-radius:9px;background:#fff5e8;color:#8b4c00;font-size:13px;margin-bottom:12px}.error{background:#fff0ef;color:#a1261d}.empty{text-align:center;color:#7a8597;padding:26px}
+#login{max-width:420px;margin:8vh auto}.login-title{margin-bottom:18px}.login-title p{color:#69758a;font-size:14px}
+@media(max-width:680px){.grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}.userline{width:100%;justify-content:space-between}main{margin:16px auto;padding:0 12px}.panel{padding:15px}th,td{white-space:nowrap}}
+</style>
+</head>
+<body>
+<header><strong>手机报价档案系统</strong><div id="userline" class="userline hidden"><span id="identity"></span><button class="secondary" id="logout">退出登录</button></div></header>
+<main>
+<section id="login" class="panel">
+<div class="login-title"><h1>登录系统</h1><p>使用管理员或成员账号登录，查看和维护手机价格档案。</p></div>
+<div id="login-error" class="notice error hidden"></div>
+<form id="login-form" class="field">
+<label for="username">用户名</label><input id="username" autocomplete="username" required maxlength="64">
+<label for="password">密码</label><input id="password" type="password" autocomplete="current-password" required>
+<button type="submit">登录</button>
+</form>
+</section>
+<section id="app" class="hidden">
+<div class="panel toolbar"><div><h1>商品档案</h1><div class="muted">记录商品及其完整价格历史</div></div><button id="new-product-btn">新增商品</button></div>
+<div id="product-form-panel" class="panel hidden">
+<h2>新增商品</h2><form id="product-form" class="field">
+<div class="grid"><div class="field"><label>品牌</label><input name="brand" maxlength="40" required placeholder="例如：华为"></div><div class="field"><label>型号</label><input name="model" maxlength="100" required placeholder="例如：Mate 系列"></div></div>
+<div class="field"><label>商品简介（选填）</label><textarea name="intro" maxlength="2000"></textarea></div>
+<div class="actions"><button type="submit">保存商品</button><button type="button" class="secondary" id="cancel-product">取消</button></div>
+</form></div>
+<div class="panel"><div id="message" class="notice hidden"></div><div class="tablewrap"><table><thead><tr><th>品牌</th><th>型号</th><th>简介</th><th>操作</th></tr></thead><tbody id="products"></tbody></table></div><div id="empty-products" class="empty hidden">暂无商品，请新增商品档案。</div></div>
+<div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div><button id="new-price-btn">新增价格</button></div>
+<div id="price-form-panel" class="hidden"><form id="price-form" class="field"><div class="grid">
+<div class="field"><label>版本 / 配置</label><input name="variant" maxlength="100" required placeholder="如 12GB+256GB"></div>
+<div class="field"><label>价格类型</label><input name="price_type" maxlength="32" required placeholder="按业务口径填写"></div>
+<div class="field"><label>价格（元）</label><input name="price" type="number" min="0.01" step="0.01" required></div>
+<div class="field"><label>生效日期</label><input name="effective_date" type="date" required></div>
+</div><div class="field"><label>备注（选填）</label><textarea name="note"></textarea></div><div class="actions"><button type="submit">保存价格记录</button><button type="button" class="secondary" id="cancel-price">取消</button></div></form></div>
+<div class="tablewrap"><table><thead><tr><th>生效日期</th><th>版本 / 配置</th><th>价格类型</th><th>价格</th><th>录入人</th><th>录入时间</th><th>状态 / 操作</th></tr></thead><tbody id="prices"></tbody></table></div><div id="empty-prices" class="empty hidden">该商品暂无价格记录。</div></div>
+</section>
+</main>
+<script>
+(()=> {
+const $=s=>document.querySelector(s);
+let token=localStorage.getItem("quote_token")||"",me=null,currentProduct=null;
+const api=async(path,opts={})=>{
+ const headers={"Content-Type":"application/json",...(opts.headers||{})};
+ if(token)headers.Authorization="Bearer "+token;
+ const res=await fetch("/api"+path,{...opts,headers});
+ const data=await res.json().catch(()=>({detail:"服务器返回异常"}));
+ if(!res.ok){if(res.status===401){logout(false)}throw new Error(data.detail||("请求失败："+res.status))}
+ return data;
+};
+function showMessage(msg,error=false){const el=$("#message");el.textContent=msg;el.classList.remove("hidden","error");if(error)el.classList.add("error")}
+function logout(callApi=true){token="";me=null;localStorage.removeItem("quote_token");$("#app").classList.add("hidden");$("#userline").classList.add("hidden");$("#login").classList.remove("hidden");$("#price-panel").classList.add("hidden");if(callApi)$("#password").value=""}
+async function enter(){me=await api("/auth/me");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");$("#userline").classList.remove("hidden");$("#identity").textContent=me.username+" · "+(me.role==="admin"?"管理员":"成员");await loadProducts()}
+async function loadProducts(){const rows=await api("/products");const body=$("#products");body.replaceChildren();$("#empty-products").classList.toggle("hidden",rows.length!==0);
+ rows.forEach(p=>{const tr=document.createElement("tr");const cells=[p.brand,p.model,p.intro||"—"];cells.forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});const td=document.createElement("td"),b=document.createElement("button");b.className="secondary";b.textContent="查看价格";b.onclick=()=>openPrices(p);td.append(b);
+ if(me.role==="admin"){const archive=document.createElement("button");archive.className="danger";archive.style.marginLeft="6px";archive.textContent="停用";archive.onclick=async()=>{const reason=prompt("请输入停用原因（至少5个字）。该商品价格历史将保留。");if(reason===null)return;if(reason.trim().length<5){alert("停用原因至少5个字");return}if(!confirm("确认停用该商品？历史价格记录不会删除。"))return;try{const result=await api("/products/"+p.id+"/archive",{method:"PATCH",body:JSON.stringify({reason})});showMessage(result.message);if(currentProduct?.id===p.id)$("#price-panel").classList.add("hidden");await loadProducts()}catch(e){showMessage(e.message,true)}};td.append(archive)}
+ tr.append(td);body.append(tr)});
+}
+async function openPrices(p){currentProduct=p;$("#price-title").textContent=p.brand+" "+p.model+" · 价格历史";$("#price-panel").classList.remove("hidden");$("#price-form-panel").classList.add("hidden");await loadPrices();$("#price-panel").scrollIntoView({behavior:"smooth",block:"start"})}
+async function loadPrices(){const rows=await api("/products/"+currentProduct.id+"/prices");const body=$("#prices");body.replaceChildren();$("#empty-prices").classList.toggle("hidden",rows.length!==0);
+ rows.forEach(r=>{const tr=document.createElement("tr");[r.effective_date,r.variant,r.price_type,"¥"+Number(r.price).toFixed(2),String(r.recorded_by),new Date(r.created_at).toLocaleString()].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});const td=document.createElement("td");td.textContent=r.voided_at?"已作废":"有效";if(me.role==="admin"&&!r.voided_at){const b=document.createElement("button");b.className="danger";b.style.marginLeft="8px";b.textContent="作废";b.onclick=async()=>{const reason=prompt("请输入作废原因（至少5个字）。原价格会保留供追溯。");if(reason===null)return;if(reason.trim().length<5){alert("作废原因至少5个字");return}if(!confirm("确认作废这条 ¥"+Number(r.price).toFixed(2)+" 的价格记录？"))return;try{await api("/prices/"+r.id+"/void?reason="+encodeURIComponent(reason.trim()),{method:"PATCH"});await loadPrices()}catch(e){showMessage(e.message,true)}};td.append(b)}tr.append(td);body.append(tr)});
+}
+$("#login-form").addEventListener("submit",async e=>{e.preventDefault();const error=$("#login-error");error.classList.add("hidden");try{const data=await api("/auth/login",{method:"POST",body:JSON.stringify({username:$("#username").value.trim(),password:$("#password").value})});token=data.access_token;localStorage.setItem("quote_token",token);await enter()}catch(err){error.textContent=err.message;error.classList.remove("hidden")}});
+$("#logout").onclick=()=>logout();
+$("#new-product-btn").onclick=()=>$("#product-form-panel").classList.toggle("hidden");
+$("#cancel-product").onclick=()=>$("#product-form-panel").classList.add("hidden");
+$("#product-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/products",{method:"POST",body:JSON.stringify({brand:f.get("brand"),model:f.get("model"),intro:f.get("intro")||null})});e.currentTarget.reset();$("#product-form-panel").classList.add("hidden");showMessage("商品已保存");await loadProducts()}catch(err){showMessage(err.message,true)}});
+$("#new-price-btn").onclick=()=>$("#price-form-panel").classList.toggle("hidden");
+$("#cancel-price").onclick=()=>$("#price-form-panel").classList.add("hidden");
+$("#price-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/products/"+currentProduct.id+"/prices",{method:"POST",body:JSON.stringify({variant:f.get("variant"),price_type:f.get("price_type"),price:f.get("price"),effective_date:f.get("effective_date"),note:f.get("note")||null})});e.currentTarget.reset();$("#price-form-panel").classList.add("hidden");await loadPrices()}catch(err){showMessage(err.message,true)}});
+if(token)enter().catch(()=>logout(false));
+})();
+</script>
+</body></html>
