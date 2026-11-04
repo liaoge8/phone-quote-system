@@ -21,7 +21,7 @@ uvicorn app.main:app --reload
 
 健康检查：`GET /api/health`
 
-首次创建管理员：仅在临时设置 `ALLOW_FIRST_ADMIN_BOOTSTRAP=true` 时开放隐藏接口 `POST /api/bootstrap/first-admin?username=...&password=...`。初始化成功后立即移除该环境变量并重启服务。不要将密码写入代码、提交到仓库或发到聊天中。
+首次创建管理员：仅在临时设置 `ALLOW_FIRST_ADMIN_BOOTSTRAP=true` 时开放隐藏接口 `POST /api/bootstrap/first-admin`，请求 JSON body 提供 username/password。初始化成功后立即移除该环境变量并重启服务。不要将密码写入代码、提交到仓库或发到聊天中。
 
 ## 当前实现
 
@@ -34,4 +34,4 @@ uvicorn app.main:app --reload
 
 ## 重要边界
 
-用户提供的 v1.0 规范在 price_records DDL 中途截断。此处字段为满足已明确的追加写入、记录人、时间、作废追溯要求所作的最小工程设计，需在最终业务 DDL 补齐后复核。月度政策、销量、入网台账、快照 revision、审计 denied 记录、CSV、Worker 与前端尚未完成。当前测试尚未在 CI 或服务器执行。
+用户提供的 v1.0 规范在 price_records DDL 中途截断。此处字段为满足已明确的追加写入、记录人、时间、作废追溯要求所作的最小工程设计，需在最终业务 DDL 补齐后复核。月度政策、销量、入网台账、快照 revision、CSV、Worker 与前端尚未完成。当前测试尚未在 CI 或服务器执行。
