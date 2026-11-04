@@ -10,11 +10,14 @@ from app.models.price_record import PriceRecord
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.price_record import PriceRecordCreate, PriceRecordOut
+
 router = APIRouter()
+
+
 @router.post('/products/{product_id}/prices', response_model=PriceRecordOut, status_code=201)
 def add_price(product_id: int, body: PriceRecordCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     product = db.get(Product, product_id)
-    if not product or product.archived_at:
+    if not product or product.archived_at or product.status != "on_sale":
         raise HTTPException(404, '商品不存在或已停用')
     record = PriceRecord(product_id=product_id, recorded_by=user.id, **body.model_dump())
     db.add(record)
@@ -23,6 +26,8 @@ def add_price(product_id: int, body: PriceRecordCreate, db: Session = Depends(ge
     db.commit()
     db.refresh(record)
     return record
+
+
 @router.get('/products/{product_id}/prices', response_model=list[PriceRecordOut])
 def list_prices(product_id: int, start: date | None = None, end: date | None = None, as_of: date | None = None, include_voided: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     if start and end and start > end:
@@ -37,9 +42,13 @@ def list_prices(product_id: int, start: date | None = None, end: date | None = N
     if as_of:
         stmt = stmt.where(PriceRecord.effective_date <= as_of)
     else:
-        if start: stmt = stmt.where(PriceRecord.effective_date >= start)
-        if end: stmt = stmt.where(PriceRecord.effective_date <= end)
+        if start:
+            stmt = stmt.where(PriceRecord.effective_date >= start)
+        if end:
+            stmt = stmt.where(PriceRecord.effective_date <= end)
     return list(db.scalars(stmt.order_by(PriceRecord.effective_date.desc(), PriceRecord.id.desc())).all())
+
+
 @router.patch('/prices/{record_id}/void')
 def void_price(record_id: int, reason: str, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     if len(reason.strip()) < 5:
