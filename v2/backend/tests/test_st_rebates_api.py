@@ -94,3 +94,17 @@ def test_price_overview_includes_st_rebate_only_when_recorded(client):
     assert item["st_rebate"] == "300.00"
     assert item["base_price"] is None
     assert item["policy_price"] is None
+
+
+def test_price_overview_csv_export_contains_separate_effective_dates(client):
+    client, product_id, _admin_id, _member_id = client
+    headers = auth(client, "st_member", "member-password-123")
+    created = client.post(f"/api/products/{product_id}/st-rebates", headers=headers, json={
+        "variant": "12+256G", "amount": "300.00", "effective_date": "2026-11-01"
+    })
+    assert created.status_code == 201
+    response = client.get("/api/price-overview?as_of=2026-11-05&export=true", headers=headers)
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "ST返利生效日期".encode("utf-8") in response.content
+    assert "300.00".encode("utf-8") in response.content
