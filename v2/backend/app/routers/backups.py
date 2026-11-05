@@ -118,7 +118,8 @@ async def upload_backup(file: UploadFile = File(...), db: Session = Depends(get_
         filename = "phone-quote-upload-" + uuid4().hex + ".tar.gz"
         final_path = BACKUP_DIR / filename
         os.replace(temp_path, final_path)
-        checksum = hashlib.sha256(final_path.read_bytes()).hexdigest()
+        with final_path.open("rb") as backup_stream:
+            checksum = hashlib.file_digest(backup_stream, "sha256").hexdigest()
         (BACKUP_DIR / (filename + ".sha256")).write_text(f"{checksum}  {filename}\n", encoding="utf-8")
         _audit(db, admin, "backup.uploaded", filename,
                {"size": total, "created_at": metadata.get("created_at"), "sha256": checksum})
