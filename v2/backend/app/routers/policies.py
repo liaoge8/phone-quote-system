@@ -15,6 +15,7 @@ from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.policy_price import PolicyEvidence, PolicyPrice
 from app.models.product import Product
+from app.models.product_variant import ProductVariant
 from app.models.user import User
 from app.schemas.policy_price import (
     PolicyEvidenceOut, PolicyPriceCreate, PolicyPriceOut,
@@ -60,9 +61,15 @@ def create_policy_price(
     if not product or product.archived_at or product.status != "on_sale":
         raise HTTPException(404, "商品不存在或已停用")
     month = body.effective_date.replace(day=1)
+    variant = db.scalar(select(ProductVariant).where(
+        ProductVariant.product_id == body.product_id,
+        ProductVariant.display_name == body.variant,
+        ProductVariant.is_active.is_(True),
+    ))
     record = PolicyPrice(
         product_id=body.product_id,
         variant=body.variant,
+        variant_id=variant.id if variant else None,
         effective_month=month,
         effective_date=body.effective_date,
         policy_price=body.policy_price,
