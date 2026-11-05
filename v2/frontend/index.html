@@ -144,7 +144,7 @@ main{padding:0 8px}
 <div id="detail-policy-note" class="detail-policy hidden"></div>
 <div id="detail-official" class="official-reference">官网参考价：暂未接入官网价格档案</div>
 <div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div>
-<div class="actions" style="margin-top:12px"><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策价</button></div>
+<div class="actions" style="margin-top:12px"><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策价</button></div>
 </div>
 <div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div><button id="new-price-btn">新增价格</button></div><div class="grid" style="margin:12px 0"><div class="field"><label>开始日期</label><input id="price-start" type="date"></div><div class="field"><label>结束日期</label><input id="price-end" type="date"></div><div class="field"><label>按月查询</label><input id="price-month" type="month"></div><div class="field"><label>按年查询</label><input id="price-year" type="number" min="2000" max="2100" placeholder="例如 2026"></div><div class="field"><label>指定日期（查询当日及之前记录）</label><input id="price-asof" type="date"></div><div class="field" style="justify-content:end"><button id="filter-prices-btn" class="secondary">筛选历史</button><button id="clear-price-filter-btn" class="secondary">清除筛选</button></div></div>
 <div id="price-form-panel" class="hidden"><form id="price-form" class="field"><div class="grid">
@@ -240,7 +240,7 @@ const api=async(path,opts={})=>{
 };
 function showMessage(msg,error=false){const el=$("#message");el.textContent=msg;el.classList.remove("hidden","error");if(error)el.classList.add("error")}
 function logout(callApi=true){token="";me=null;currentProduct=null;localStorage.removeItem("quote_token");$("#app").classList.add("hidden");$("#userline").classList.add("hidden");$("#login").classList.remove("hidden");$("#price-panel").classList.add("hidden");$("#policy-panel").classList.add("hidden");$("#st-panel").classList.add("hidden");$("#admin-panel").classList.add("hidden");$("#audit-panel").classList.add("hidden");if(callApi)$("#password").value=""}
-async function enter(){me=await api("/auth/me");$("#archived-products-btn").classList.toggle("hidden",me.role!=="admin");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");$("#userline").classList.remove("hidden");$("#identity").textContent=me.username+" · "+(me.role==="admin"?"管理员":"成员");await loadProducts();if(me.role==="admin"){await loadAdmin();await loadBackups()}}
+async function enter(){me=await api("/auth/me");$("#archived-products-btn").classList.toggle("hidden",me.role!=="admin");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");$("#userline").classList.remove("hidden");$("#identity").textContent=me.username;await loadProducts();if(me.role==="admin"){await loadAdmin();await loadBackups()}}
 async function loadAdmin(){if(me.role!=="admin")return;$("#admin-panel").classList.remove("hidden");$("#backup-panel").classList.remove("hidden");$("#audit-panel").classList.remove("hidden");
  const users=await api("/auth/users"),body=$("#members");body.replaceChildren();
  users.forEach(u=>{const tr=document.createElement("tr");[u.username,u.role==="admin"?"管理员":"成员",u.is_active?"启用":"停用"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});
@@ -325,6 +325,14 @@ function chooseVariant(v){
  history.forEach(r=>{const row=document.createElement("div");row.className="history-row";const d=document.createElement("span");d.textContent=r.date;const t=document.createElement("span");t.textContent=r.type+(r.voided?" · 已作废":"");const a=document.createElement("strong");a.textContent=money(r.amount);row.append(d,t,a);hist.append(row)});
 }
 $("#back-products").onclick=()=>{$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden")};
+$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");
+$("#detail-add-variant").onclick=async()=>{
+ if(!currentProduct||me?.role!=="admin")return;
+ const display_name=prompt("请输入配置名称，例如 12GB+256GB");if(display_name===null)return;
+ const ram=prompt("运行内存（选填，例如 12GB）")||null;
+ const storage=prompt("存储容量（选填，例如 256GB）")||null;
+ try{await api("/products/"+currentProduct.id+"/variants",{method:"POST",body:JSON.stringify({display_name,ram,storage})});await openProductDetail(currentProduct);showMessage("配置已添加")}catch(e){showMessage(e.message,true)}
+};
 $("#detail-add-price").onclick=()=>{if(!currentProduct)return;$("#product-detail").classList.add("hidden");openPrices(currentProduct).then(()=>{$("#price-form-panel").classList.remove("hidden");$("#price-form [name=variant]").value=selectedVariant==="尚未录入配置"?"":selectedVariant})};
 $("#detail-add-rebate").onclick=()=>{if(!currentProduct)return;$("#product-detail").classList.add("hidden");openST(currentProduct).then(()=>{$("#st-form-panel").classList.remove("hidden");$("#st-form [name=variant]").value=selectedVariant==="尚未录入配置"?"":selectedVariant})};
 $("#detail-add-policy").onclick=()=>{if(!currentProduct)return;$("#product-detail").classList.add("hidden");openPolicies(currentProduct).then(()=>{$("#policy-form-panel").classList.remove("hidden");$("#policy-form [name=variant]").value=selectedVariant==="尚未录入配置"?"":selectedVariant})};
