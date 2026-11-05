@@ -29,3 +29,5 @@ class ProductOut(BaseModel):
     model: str
     intro: str | None
     status: str
+    variants_count: int = 0
+    colors_count: int = 0

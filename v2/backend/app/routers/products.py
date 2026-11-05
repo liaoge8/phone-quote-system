@@ -9,21 +9,34 @@ from app.models.audit_log import AuditLog
 from app.models.price_record import PriceRecord
 from app.models.product import Product
 from app.models.product_variant import ProductVariant
+from app.models.product_color import ProductColor
 from app.models.user import User
 from app.schemas.product import ProductArchiveIn, ProductCreate, ProductOut
 from app.schemas.product_variant import ProductVariantCreate, ProductVariantOut
+from app.schemas.product_color import ProductColorCreate, ProductColorOut
 
 router = APIRouter()
 
 
 @router.get("", response_model=list[ProductOut])
 def list_products(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    variant_count = select(func.count(ProductVariant.id)).where(
+        ProductVariant.product_id == Product.id,
+        ProductVariant.is_active.is_(True),
+    ).scalar_subquery()
+    color_count = select(func.count(ProductColor.id)).where(
+        ProductColor.product_id == Product.id,
+    ).scalar_subquery()
     stmt = (
-        select(Product)
+        select(Product, variant_count.label("variants_count"), color_count.label("colors_count"))
         .where(Product.archived_at.is_(None), Product.status == "on_sale")
         .order_by(Product.id.desc())
     )
-    return list(db.scalars(stmt).all())
+    return [
+        {"id": p.id, "brand": p.brand, "model": p.model, "intro": p.intro,
+         "status": p.status, "variants_count": variants, "colors_count": colors}
+        for p, variants, colors in db.execute(stmt).all()
+    ]
 
 
 @router.get("/archived")
@@ -184,3 +197,47 @@ def create_product_variant(
     db.commit()
     db.refresh(variant)
     return variant
+
+
+@router.get("/{product_id}/colors", response_model=list[ProductColorOut])
+def list_product_colors(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    if not db.get(Product, product_id):
+        raise HTTPException(404, "商品不存在")
+    return list(db.scalars(
+        select(ProductColor).where(ProductColor.product_id == product_id).order_by(ProductColor.id)
+    ).all())
+
+
+@router.post("/{product_id}/colors", response_model=ProductColorOut, status_code=201)
+def create_product_color(
+    product_id: int,
+    body: ProductColorCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    product = db.get(Product, product_id)
+    if not product or product.archived_at or product.status != "on_sale":
+        raise HTTPException(404, "商品不存在或已停用")
+    existing = db.scalar(select(ProductColor).where(
+        ProductColor.product_id == product_id,
+        ProductColor.color_name == body.color_name,
+    ))
+    if existing:
+        raise HTTPException(409, "该商品颜色已登记")
+    color = ProductColor(product_id=product_id, color_name=body.color_name)
+    db.add(color)
+    db.flush()
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="product_color.created",
+        target_type="product_color",
+        target_id=str(color.id),
+        detail={"product_id": product_id, "color_name": color.color_name},
+    ))
+    db.commit()
+    db.refresh(color)
+    return color
