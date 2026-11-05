@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.price_record import PriceRecord
 from app.models.product import Product
+from app.models.product_variant import ProductVariant
 from app.models.user import User
 from app.schemas.price_record import PriceRecordCreate, PriceRecordOut
 
@@ -19,7 +20,12 @@ def add_price(product_id: int, body: PriceRecordCreate, db: Session = Depends(ge
     product = db.get(Product, product_id)
     if not product or product.archived_at or product.status != "on_sale":
         raise HTTPException(404, '商品不存在或已停用')
-    record = PriceRecord(product_id=product_id, recorded_by=user.id, **body.model_dump())
+    variant = db.scalar(select(ProductVariant).where(
+        ProductVariant.product_id == product_id,
+        ProductVariant.display_name == body.variant,
+        ProductVariant.is_active.is_(True),
+    ))
+    record = PriceRecord(product_id=product_id, variant_id=variant.id if variant else None, recorded_by=user.id, **body.model_dump())
     db.add(record)
     db.flush()
     db.add(AuditLog(actor_id=user.id, action='price.created', target_type='price_record', target_id=str(record.id)))
