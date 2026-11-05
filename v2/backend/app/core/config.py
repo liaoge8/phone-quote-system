@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     scrypt_r: int = 8
     scrypt_p: int = 1
     cors_origins: str = ''
+    policy_evidence_dir: str = './data/policy-evidence'
     @property
     def cors_origin_list(self) -> list[str]:
         return [x.strip() for x in self.cors_origins.split(',') if x.strip()]
