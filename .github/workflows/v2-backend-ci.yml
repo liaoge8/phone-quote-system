@@ -6,6 +6,7 @@ on:
       - 'v2/backend/**'
       - 'v2/frontend/**'
       - '.github/workflows/v2-backend-ci.yml'
+      - 'scripts/backup.sh'
   pull_request:
     branches: [main]
     paths:
@@ -33,3 +34,38 @@ jobs:
         run: |
           python -c "import re; s=open('../frontend/index.html', encoding='utf-8').read(); scripts=re.findall(r'<script>(.*?)</script>', s, re.S); assert scripts, 'no inline script found'; open('/tmp/frontend.js','w',encoding='utf-8').write(''.join(scripts))"
           node --check /tmp/frontend.js
+
+  postgres-migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: quote_ci
+          POSTGRES_PASSWORD: quote_ci_password
+          POSTGRES_DB: quote_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quote_ci -d quote_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: v2/backend
+    env:
+      SECRET_KEY: ci-only-secret-key-at-least-32-characters
+      DATABASE_URL: postgresql+psycopg://quote_ci:quote_ci_password@localhost:5432/quote_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: v2/backend/requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Apply migrations on PostgreSQL 16
+        run: alembic upgrade head
+      - name: Validate backup script syntax
+        run: bash -n ../../scripts/backup.sh
