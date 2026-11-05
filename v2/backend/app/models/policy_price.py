@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, func
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -14,7 +14,7 @@ class PolicyPrice(Base):
             "uq_policy_prices_active_product_variant_month",
             "product_id", "variant", "effective_month",
             unique=True,
-            sqlite_where=__import__("sqlalchemy").text("voided_at IS NULL"),
+            sqlite_where=text("voided_at IS NULL"),
             postgresql_where=__import__("sqlalchemy").text("voided_at IS NULL"),
         ),
     )
