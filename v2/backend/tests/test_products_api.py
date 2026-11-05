@@ -235,3 +235,28 @@ def test_archived_product_list_is_admin_only_and_restoreable(product_client):
     rows = client.get("/api/products/archived", headers=admin_headers)
     assert rows.status_code == 200
     assert any(row["id"] == product_id for row in rows.json())
+
+
+def test_product_marketing_fields_are_saved_and_returned(product_client):
+    client, _ = product_client
+    headers = _login(client, "product_member", "member-password-123")
+    created = client.post(
+        "/api/products",
+        headers=headers,
+        json={
+            "brand": "华为",
+            "model": "nova 测试款",
+            "tagline": "轻薄人像手机",
+            "intro": "用于验证商品介绍字段",
+            "selling_points": ["前置人像", "轻薄机身", "长续航"],
+        },
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["tagline"] == "轻薄人像手机" or body["tagline"] == "轻薄人像手机"
+    assert body["selling_points"] == ["前置人像", "轻薄机身", "长续航"]
+    listed = client.get("/api/products", headers=headers)
+    assert listed.status_code == 200
+    item = next(row for row in listed.json() if row["id"] == body["id"])
+    assert item["tagline"] == "轻薄人像手机"
+    assert item["selling_points"] == ["前置人像", "轻薄机身", "长续航"]
