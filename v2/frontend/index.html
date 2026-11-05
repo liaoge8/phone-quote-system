@@ -269,7 +269,11 @@ function renderProductCards(){
  const q=($("#product-search")?.value||"").trim().toLowerCase(),brand=$("#brand-filter")?.value||"";
  const body=$("#products");body.replaceChildren();
  const normalized=s=>String(s||"").toLowerCase().replace(/[\\s_-]+/g,"");
- const rows=productRows.filter(p=>(!brand||p.brand===brand)&&(!q||normalized(p.model).includes(normalized(q))||normalized(p.brand+" "+p.model).includes(normalized(q))||normalized(p.intro).includes(normalized(q))));
+ const matching=productRows.filter(p=>(!brand||p.brand===brand)&&(!q||normalized(p.model).includes(normalized(q))||normalized(p.brand+" "+p.model).includes(normalized(q))||normalized(p.intro).includes(normalized(q))));
+ const rows=q?matching.sort((a,b)=>{
+  const rank=p=>normalized(p.model)===normalized(q)?0:normalized(p.model).includes(normalized(q))?1:normalized(p.brand+" "+p.model).includes(normalized(q))?2:3;
+  return rank(a)-rank(b);
+ }):matching;
  $("#empty-products").classList.toggle("hidden",rows.length!==0);
  rows.forEach(p=>{
   const card=document.createElement("article");card.className="product-card";card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","打开 "+p.brand+" "+p.model);
@@ -277,7 +281,7 @@ function renderProductCards(){
   const name=document.createElement("strong");name.textContent=p.model;
   const intro=document.createElement("div");intro.className="sub";intro.textContent=p.intro||"商品资料待完善";
   const counts=document.createElement("div");counts.className="sub";counts.textContent=(p.variants_count||0)+"种配置 · "+(p.colors_count||0)+"种颜色";
-  const price=document.createElement("div");price.className="from";price.textContent="查看配置与报价";
+  const price=document.createElement("div");price.className="from";price.textContent=p.current_policy_from!==null&&p.current_policy_from!==undefined?"当前政策价 ¥"+Number(p.current_policy_from).toFixed(2)+" 起":"暂无报价";
   card.append(brandEl,name,intro,counts,price);card.onclick=()=>openProductDetail(p);card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openProductDetail(p)}};
   body.append(card);
  });
