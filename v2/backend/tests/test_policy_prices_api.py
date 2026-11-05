@@ -175,7 +175,11 @@ def test_evidence_download_rejects_tampered_file(policy_client, tmp_path, monkey
     )
     assert upload.status_code == 201, upload.text
     evidence = upload.json()
-    (tmp_path / evidence["storage_key"]).write_bytes(b"tampered")
+    from app.models.policy_price import PolicyEvidence
+    with _session() as db:
+        stored = db.get(PolicyEvidence, evidence["id"])
+        storage_key = stored.storage_key
+    (tmp_path / storage_key).write_bytes(b"tampered")
     fetched = client.get(
         f"/api/policies/evidence/{evidence['id']}/file",
         headers=headers,
