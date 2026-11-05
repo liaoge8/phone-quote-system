@@ -282,18 +282,19 @@ function renderProductCards(){
  });
 }
 async function openProductDetail(p){
- currentProduct=p;selectedVariant="";
+ currentProduct=p;selectedVariant="";$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");
  $("#product-detail").classList.remove("hidden");$("#products").parentElement.classList.add("hidden");
  $("#detail-brand").textContent=p.brand;$("#detail-name").textContent=p.model;$("#detail-intro").textContent=p.intro||"";
  $("#detail-colors").textContent="";
  try{
-  const [prices,rebates,policies]=await Promise.all([
+  const [prices,rebates,policies,registeredVariants]=await Promise.all([
    api("/products/"+p.id+"/prices"),
    api("/products/"+p.id+"/st-rebates"),
-   api("/policies?month="+currentMonthKey()+"-01")
+   api("/policies?month="+currentMonthKey()+"-01"),
+   api("/products/"+p.id+"/variants")
   ]);
-  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id)};
-  const variants=[...new Set([...prices.map(x=>x.variant),...rebates.map(x=>x.variant),...detailCache.policies.map(x=>x.variant)])];
+  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants};
+  const variants=[...new Set([...registeredVariants.map(x=>x.display_name),...prices.map(x=>x.variant),...rebates.map(x=>x.variant),...detailCache.policies.map(x=>x.variant)])];
   variants.sort((a,b)=>a.localeCompare(b,"zh-CN", {numeric:true}));
   if(!variants.length)variants.push("尚未录入配置");
   renderVariantPills(variants);
@@ -325,7 +326,6 @@ function chooseVariant(v){
  history.forEach(r=>{const row=document.createElement("div");row.className="history-row";const d=document.createElement("span");d.textContent=r.date;const t=document.createElement("span");t.textContent=r.type+(r.voided?" · 已作废":"");const a=document.createElement("strong");a.textContent=money(r.amount);row.append(d,t,a);hist.append(row)});
 }
 $("#back-products").onclick=()=>{$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden")};
-$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");
 $("#detail-add-variant").onclick=async()=>{
  if(!currentProduct||me?.role!=="admin")return;
  const display_name=prompt("请输入配置名称，例如 12GB+256GB");if(display_name===null)return;
