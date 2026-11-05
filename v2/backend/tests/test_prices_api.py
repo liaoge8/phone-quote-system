@@ -168,3 +168,32 @@ def test_date_range_and_as_of_filters(client):
         params={"as_of": "2026-10-31"},
     )
     assert [item["price"] for item in as_of.json()] == ["3800.00"]
+
+
+def test_month_and_year_history_filters(client):
+    client, product_id, _admin_id, _member_id, _TestingSession = client
+    headers = login(client, "price_member", "member-password-123")
+    for day, amount in [("2025-12-31", "3700.00"), ("2026-01-15", "3800.00"), ("2026-11-02", "3900.00")]:
+        response = create_price(client, headers, product_id, effective_date=day, price=amount)
+        assert response.status_code == 201, response.text
+
+    month_rows = client.get(
+        f"/api/products/{product_id}/prices",
+        headers=headers,
+        params={"month": "2026-11-01"},
+    )
+    assert [row["price"] for row in month_rows.json()] == ["3900.00"]
+
+    year_rows = client.get(
+        f"/api/products/{product_id}/prices",
+        headers=headers,
+        params={"year": 2026},
+    )
+    assert [row["price"] for row in year_rows.json()] == ["3900.00", "3800.00"]
+
+    conflict = client.get(
+        f"/api/products/{product_id}/prices",
+        headers=headers,
+        params={"month": "2026-11-01", "year": 2026},
+    )
+    assert conflict.status_code == 422
