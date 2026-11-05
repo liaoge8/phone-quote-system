@@ -1,5 +1,6 @@
 from datetime import date
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -58,7 +59,11 @@ def create_policy_price(
         raise HTTPException(409, "该商品版本本月已有有效政策价；请先作废旧记录再重录")
     record = PolicyPrice(**body.model_dump(), recorded_by=user.id)
     db.add(record)
-    db.flush()
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "该商品版本本月已有有效政策价；请先作废旧记录再重录")
     db.add(AuditLog(actor_id=user.id, action="policy_price.created", target_type="policy_price", target_id=str(record.id), detail={"month": record.effective_month.isoformat(), "price": str(record.policy_price)}))
     db.commit()
     db.refresh(record)
