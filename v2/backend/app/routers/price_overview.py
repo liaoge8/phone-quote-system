@@ -25,8 +25,6 @@ def price_overview(as_of: date | None = None, export: bool = False, db: Session 
         select(Product).where(Product.archived_at.is_(None), Product.status == "on_sale").order_by(Product.brand, Product.model)
     ).all())
     product_ids = [p.id for p in products]
-    if not product_ids:
-        return {"as_of": cutoff, "items": []}
 
     bases = db.scalars(
         select(PriceRecord).where(
@@ -98,6 +96,9 @@ def price_overview(as_of: date | None = None, export: bool = False, db: Session 
         return StreamingResponse(
             iter([output.getvalue().encode("utf-8-sig")]),
             media_type="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "X-Export-Row-Count": str(len(items)),
+            },
         )
     return {"as_of": cutoff, "items": items}
