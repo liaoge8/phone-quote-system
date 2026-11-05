@@ -159,3 +159,40 @@ def test_screenshot_evidence_upload_is_hashed_and_retrievable(policy_client, tmp
     fetched = client.get(f"/api/policies/evidence/{evidence['id']}/file", headers=headers)
     assert fetched.status_code == 200
     assert fetched.content == image
+
+
+def test_evidence_download_rejects_tampered_file(policy_client, tmp_path, monkeypatch):
+    from app.routers import policies
+    monkeypatch.setattr(policies.settings, "policy_evidence_dir", str(tmp_path))
+    client, product_id, _admin_id, _member_id, _session = policy_client
+    headers = auth(client, "policy_member", "member-password-123")
+    created = create_policy(client, headers, product_id, current_business_month().replace(day=16))
+    image = b"\\x89PNG\\r\\n\\x1a\\n" + b"original-image-content"
+    upload = client.post(
+        f"/api/policies/{created.json()['id']}/evidence",
+        headers=headers,
+        files={"file": ("policy.png", image, "image/png")},
+    )
+    assert upload.status_code == 201, upload.text
+    evidence = upload.json()
+    (tmp_path / evidence["storage_key"]).write_bytes(b"tampered")
+    fetched = client.get(
+        f"/api/policies/evidence/{evidence['id']}/file",
+        headers=headers,
+    )
+    assert fetched.status_code == 500
+    assert "完整性校验失败" in fetched.json()["detail"]
+
+
+def test_evidence_upload_rejects_mismatched_image_signature(policy_client, tmp_path, monkeypatch):
+    from app.routers import policies
+    monkeypatch.setattr(policies.settings, "policy_evidence_dir", str(tmp_path))
+    client, product_id, _admin_id, _member_id, _session = policy_client
+    headers = auth(client, "policy_member", "member-password-123")
+    created = create_policy(client, headers, product_id, current_business_month().replace(day=16))
+    response = client.post(
+        f"/api/policies/{created.json()['id']}/evidence",
+        headers=headers,
+        files={"file": ("fake.png", b"not-a-png-file", "image/png")},
+    )
+    assert response.status_code == 415
