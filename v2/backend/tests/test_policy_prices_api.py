@@ -167,7 +167,7 @@ def test_evidence_download_rejects_tampered_file(policy_client, tmp_path, monkey
     client, product_id, _admin_id, _member_id, _session = policy_client
     headers = auth(client, "policy_member", "member-password-123")
     created = create_policy(client, headers, product_id, current_business_month().replace(day=16))
-    image = b"\\x89PNG\\r\\n\\x1a\\n" + b"original-image-content"
+    image = b"\x89PNG\r\n\x1a\n" + b"original-image-content"
     upload = client.post(
         f"/api/policies/{created.json()['id']}/evidence",
         headers=headers,
