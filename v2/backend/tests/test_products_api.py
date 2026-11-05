@@ -217,3 +217,21 @@ def test_product_create_rejects_blank_brand_or_model(product_client, field_value
         json={"brand": field_value, "model": "Valid Model"},
     )
     assert response.status_code == 422
+
+
+def test_archived_product_list_is_admin_only_and_restoreable(product_client):
+    client, _sessions = product_client
+    admin_headers = _login(client, "product_admin", "admin-password-123")
+    member_headers = _login(client, "product_member", "member-password-123")
+    created = client.post("/api/products", headers=member_headers, json={
+        "brand": "华为", "model": "归档列表测试"
+    })
+    product_id = created.json()["id"]
+    archived = client.patch(f"/api/products/{product_id}/archive", headers=admin_headers, json={
+        "reason": "该型号已停止销售"
+    })
+    assert archived.status_code == 200
+    assert client.get("/api/products/archived", headers=member_headers).status_code == 403
+    rows = client.get("/api/products/archived", headers=admin_headers)
+    assert rows.status_code == 200
+    assert any(row["id"] == product_id for row in rows.json())
