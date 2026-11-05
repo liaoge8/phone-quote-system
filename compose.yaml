@@ -6,6 +6,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -48,3 +50,37 @@ volumes:
 networks:
   internal:
     driver: bridge
+
+  backup:
+    image: postgres:16
+    profiles: ["tools"]
+    entrypoint: ["bash", "/scripts/backup.sh"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      POLICY_EVIDENCE_DIR: /evidence
+      BACKUP_DIR: /backups
+    volumes:
+      - ./scripts:/scripts:ro
+      - policy_evidence:/evidence:ro
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+
+  restore:
+    image: postgres:16
+    profiles: ["tools"]
+    entrypoint: ["bash", "/scripts/restore.sh"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      POLICY_EVIDENCE_DIR: /evidence
+      RESTORE_CONFIRM: ${RESTORE_CONFIRM:-}
+    volumes:
+      - ./scripts:/scripts:ro
+      - policy_evidence:/evidence
+      - ./backups:/backups:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
