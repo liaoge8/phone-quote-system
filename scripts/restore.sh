@@ -18,6 +18,7 @@ grep -qx 'format=phone-quote-backup-v1' "$work/manifest.txt" || { echo "Unsuppor
 (cd "$work" && sha256sum -c SHA256SUMS)
 mkdir -p "$POLICY_EVIDENCE_DIR"
 if find "$POLICY_EVIDENCE_DIR" -mindepth 1 -print -quit | grep -q .; then echo "Evidence target is not empty: $POLICY_EVIDENCE_DIR" >&2; exit 1; fi
+if tar -tzf "$work/policy-evidence.tar.gz" | grep -Eq '(^/|(^|/)\.\.(/|$))'; then echo "Unsafe evidence archive path detected." >&2; exit 1; fi
 tar -C "$staging" -xzf "$work/policy-evidence.tar.gz"
 existing="$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','S')")"
 [[ "$existing" == "0" ]] || { echo "Target database is not empty (public objects: $existing)." >&2; exit 1; }
