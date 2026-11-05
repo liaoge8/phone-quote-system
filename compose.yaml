@@ -76,7 +76,7 @@ services:
     volumes:
       - ./scripts:/scripts:ro
       - policy_evidence:/evidence
-      - ./backups:/backups:ro
+      - backup_archives:/backups:ro
     depends_on:
       db:
         condition: service_healthy
