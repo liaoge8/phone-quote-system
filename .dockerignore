@@ -1,0 +1,10 @@
+.git
+.env
+*.dump
+*.tar
+*.tar.gz
+*.sha256
+data/
+backups/
+__pycache__/
+.pytest_cache/
