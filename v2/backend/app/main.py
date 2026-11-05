@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.routers import auth_router, products_router, prices_router, policies_router, st_rebates_router
 from app.routers.bootstrap import router as bootstrap_router
 from app.routers.price_overview import router as price_overview_router
+from app.routers.backups import router as backups_router
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
 
@@ -27,6 +28,7 @@ app.include_router(policies_router, prefix="/api/policies", tags=["月度政策�
 app.include_router(st_rebates_router, prefix="/api", tags=["ST返利档案"])
 app.include_router(price_overview_router, prefix="/api", tags=["价格总览"])
 app.include_router(bootstrap_router, prefix="/api/bootstrap", tags=["初始化"])
+app.include_router(backups_router, prefix="/api/backups", tags=["备份管理"])
 
 
 @app.get("/", include_in_schema=False)
