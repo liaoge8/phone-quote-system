@@ -25,7 +25,9 @@ def add_price(product_id: int, body: PriceRecordCreate, db: Session = Depends(ge
         ProductVariant.display_name == body.variant,
         ProductVariant.is_active.is_(True),
     ))
-    record = PriceRecord(product_id=product_id, variant_id=variant.id if variant else None, recorded_by=user.id, **body.model_dump())
+    if not variant:
+        raise HTTPException(422, "请先在商品档案中登记该配置")
+    record = PriceRecord(product_id=product_id, variant_id=variant.id, recorded_by=user.id, **body.model_dump())
     db.add(record)
     db.flush()
     db.add(AuditLog(actor_id=user.id, action='price.created', target_type='price_record', target_id=str(record.id)))

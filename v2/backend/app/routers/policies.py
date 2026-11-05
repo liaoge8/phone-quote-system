@@ -66,6 +66,8 @@ def create_policy_price(
         ProductVariant.display_name == body.variant,
         ProductVariant.is_active.is_(True),
     ))
+    if not variant:
+        raise HTTPException(422, "请先在商品档案中登记该配置")
     record = PolicyPrice(
         product_id=body.product_id,
         variant=body.variant,
