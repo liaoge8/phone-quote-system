@@ -282,18 +282,19 @@ function renderProductCards(){
  });
 }
 async function openProductDetail(p){
- currentProduct=p;selectedVariant="";
+ currentProduct=p;selectedVariant="";$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");
  $("#product-detail").classList.remove("hidden");$("#products").parentElement.classList.add("hidden");
  $("#detail-brand").textContent=p.brand;$("#detail-name").textContent=p.model;$("#detail-intro").textContent=p.intro||"";
  $("#detail-colors").textContent="";
  try{
-  const [prices,rebates,policies]=await Promise.all([
+  const [prices,rebates,policies,registeredVariants]=await Promise.all([
    api("/products/"+p.id+"/prices"),
    api("/products/"+p.id+"/st-rebates"),
-   api("/policies?month="+currentMonthKey()+"-01")
+   api("/policies?month="+currentMonthKey()+"-01"),
+   api("/products/"+p.id+"/variants")
   ]);
-  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id)};
-  const variants=[...new Set([...prices.map(x=>x.variant),...rebates.map(x=>x.variant),...detailCache.policies.map(x=>x.variant)])];
+  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants};
+  const variants=[...new Set([...registeredVariants.map(x=>x.display_name),...prices.map(x=>x.variant),...rebates.map(x=>x.variant),...detailCache.policies.map(x=>x.variant)])];
   variants.sort((a,b)=>a.localeCompare(b,"zh-CN", {numeric:true}));
   if(!variants.length)variants.push("尚未录入配置");
   renderVariantPills(variants);
