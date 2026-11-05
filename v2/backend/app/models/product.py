@@ -14,3 +14,4 @@ class Product(Base):
     archive_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     price_records = relationship('PriceRecord', back_populates='product', passive_deletes=True)
+    variants = relationship('ProductVariant', passive_deletes=True, order_by='ProductVariant.id')

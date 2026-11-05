@@ -8,8 +8,10 @@ from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.price_record import PriceRecord
 from app.models.product import Product
+from app.models.product_variant import ProductVariant
 from app.models.user import User
 from app.schemas.product import ProductArchiveIn, ProductCreate, ProductOut
+from app.schemas.product_variant import ProductVariantCreate, ProductVariantOut
 
 router = APIRouter()
 
@@ -135,3 +137,50 @@ def restore_product(
     )
     db.commit()
     return {"id": product.id, "status": product.status, "restored": True}
+
+
+
+@router.get("/{product_id}/variants", response_model=list[ProductVariantOut])
+def list_product_variants(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    if not db.get(Product, product_id):
+        raise HTTPException(404, "商品不存在")
+    stmt = select(ProductVariant).where(
+        ProductVariant.product_id == product_id,
+        ProductVariant.is_active.is_(True),
+    ).order_by(ProductVariant.id)
+    return list(db.scalars(stmt).all())
+
+
+@router.post("/{product_id}/variants", response_model=ProductVariantOut, status_code=201)
+def create_product_variant(
+    product_id: int,
+    body: ProductVariantCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    product = db.get(Product, product_id)
+    if not product or product.archived_at or product.status != "on_sale":
+        raise HTTPException(404, "商品不存在或已停用")
+    existing = db.scalar(select(ProductVariant).where(
+        ProductVariant.product_id == product_id,
+        ProductVariant.display_name == body.display_name,
+    ))
+    if existing:
+        raise HTTPException(409, "该商品配置已存在")
+    variant = ProductVariant(product_id=product_id, **body.model_dump())
+    db.add(variant)
+    db.flush()
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="product_variant.created",
+        target_type="product_variant",
+        target_id=str(variant.id),
+        detail={"product_id": product_id, "display_name": variant.display_name},
+    ))
+    db.commit()
+    db.refresh(variant)
+    return variant
