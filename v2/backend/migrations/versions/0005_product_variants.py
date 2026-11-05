@@ -22,9 +22,17 @@ def upgrade():
     )
     op.create_index("ix_product_variants_product_id", "product_variants", ["product_id"])
 
-    op.add_column("price_records", sa.Column("variant_id", sa.Integer(), sa.ForeignKey("product_variants.id", ondelete="RESTRICT"), nullable=True))
-    op.add_column("policy_prices", sa.Column("variant_id", sa.Integer(), nullable=True))
-    op.add_column("st_rebates", sa.Column("variant_id", sa.Integer(), nullable=True))
+    for table_name, fk_name in (
+        ("price_records", "fk_price_records_variant_id"),
+        ("policy_prices", "fk_policy_prices_variant_id"),
+        ("st_rebates", "fk_st_rebates_variant_id"),
+    ):
+        with op.batch_alter_table(table_name) as batch_op:
+            batch_op.add_column(sa.Column("variant_id", sa.Integer(), nullable=True))
+            batch_op.create_foreign_key(
+                fk_name, "product_variants", ["variant_id"], ["id"], ondelete="RESTRICT"
+            )
+
     op.create_index("ix_price_records_variant_id", "price_records", ["variant_id"])
     op.create_index("ix_policy_prices_variant_id", "policy_prices", ["variant_id"])
     op.create_index("ix_st_rebates_variant_id", "st_rebates", ["variant_id"])
@@ -66,8 +74,13 @@ def downgrade():
     op.drop_index("ix_st_rebates_variant_id", table_name="st_rebates")
     op.drop_index("ix_policy_prices_variant_id", table_name="policy_prices")
     op.drop_index("ix_price_records_variant_id", table_name="price_records")
-    op.drop_column("st_rebates", "variant_id")
-    op.drop_column("policy_prices", "variant_id")
-    op.drop_column("price_records", "variant_id")
+    for table_name, fk_name in (
+        ("st_rebates", "fk_st_rebates_variant_id"),
+        ("policy_prices", "fk_policy_prices_variant_id"),
+        ("price_records", "fk_price_records_variant_id"),
+    ):
+        with op.batch_alter_table(table_name) as batch_op:
+            batch_op.drop_constraint(fk_name, type_="foreignkey")
+            batch_op.drop_column("variant_id")
     op.drop_index("ix_product_variants_product_id", table_name="product_variants")
     op.drop_table("product_variants")
