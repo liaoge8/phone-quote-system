@@ -76,3 +76,21 @@ def test_st_rebate_history_appends_and_admin_can_void(client):
     assert client.patch(f"/api/st-rebates/{second.json()['id']}/void", headers=admin_headers, params={"reason": "返利政策录入错误"}).status_code == 200
     assert client.get(f"/api/products/{product_id}/st-rebates", headers=member_headers).json()[0]["amount"] == "300.00"
     assert admin_id > 0
+
+
+def test_price_overview_includes_st_rebate_only_when_recorded(client):
+    client, product_id, _admin_id, _member_id = client
+    headers = auth(client, "st_member", "member-password-123")
+    before = client.get("/api/price-overview", headers=headers)
+    assert before.status_code == 200
+    assert before.json()["items"] == []
+    created = client.post(f"/api/products/{product_id}/st-rebates", headers=headers, json={
+        "variant": "12+256G", "amount": "300.00", "effective_date": "2026-11-01"
+    })
+    assert created.status_code == 201
+    overview = client.get("/api/price-overview?as_of=2026-11-05", headers=headers)
+    assert overview.status_code == 200
+    item = overview.json()["items"][0]
+    assert item["st_rebate"] == "300.00"
+    assert item["base_price"] is None
+    assert item["policy_price"] is None
