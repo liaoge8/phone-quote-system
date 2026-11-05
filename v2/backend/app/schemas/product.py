@@ -30,6 +30,8 @@ class ProductOut(BaseModel):
     brand: str
     model: str
     intro: str | None
+    tagline: str | None = None
+    selling_points: list[str] = Field(default_factory=list)
     status: str
     variants_count: int = 0
     colors_count: int = 0
