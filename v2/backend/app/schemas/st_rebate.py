@@ -19,6 +19,7 @@ class STRebateOut(BaseModel):
     id: int
     product_id: int
     variant: str
+    variant_id: int | None
     amount: Decimal
     effective_date: date
     note: str | None

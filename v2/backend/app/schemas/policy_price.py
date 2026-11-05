@@ -43,6 +43,7 @@ class PolicyPriceOut(BaseModel):
     id: int
     product_id: int
     variant: str
+    variant_id: int | None
     effective_month: date
     effective_date: date
     policy_price: Decimal

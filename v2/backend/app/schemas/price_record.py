@@ -20,6 +20,7 @@ class PriceRecordOut(BaseModel):
     id: int
     product_id: int
     variant: str
+    variant_id: int | None
     price_type: str
     price: Decimal
     effective_date: date
