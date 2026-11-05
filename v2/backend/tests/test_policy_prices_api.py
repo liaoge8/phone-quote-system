@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -21,6 +21,8 @@ def policy_client():
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     TestingSession = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     Base.metadata.create_all(bind=engine)
+    indexes = inspect(engine).get_indexes("policy_prices")
+    assert any(index["name"] == "uq_policy_prices_active_product_variant_month" and index["unique"] for index in indexes)
 
     def override_get_db():
         db = TestingSession()
