@@ -91,7 +91,7 @@ def test_price_overview_includes_st_rebate_only_when_recorded(client):
     overview = client.get("/api/price-overview?as_of=2026-11-05", headers=headers)
     assert overview.status_code == 200
     item = overview.json()["items"][0]
-    assert item["st_rebate"] == "300.00"
+    assert item["st_rebate"] == 300.0
     assert item["base_price"] is None
     assert item["policy_price"] is None
 
