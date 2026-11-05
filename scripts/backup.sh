@@ -21,6 +21,6 @@ EOF
 package="$BACKUP_DIR/phone-quote-$stamp.tar.gz"
 tar -C "$work" -czf "$package" database.dump policy-evidence.tar.gz manifest.txt SHA256SUMS
 chmod 600 "$package"
-sha256sum "$package" > "$package.sha256"
+(cd "$BACKUP_DIR" && sha256sum "$(basename "$package")" > "$(basename "$package").sha256")
 chmod 600 "$package.sha256"
 printf '%s\n' "Backup package: $package" "Package checksum: $package.sha256" "Copy both files to independent storage."
