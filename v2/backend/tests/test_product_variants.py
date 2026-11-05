@@ -9,6 +9,7 @@ from app.db.session import get_db
 from app.main import app
 from app.models.product import Product
 from app.models.product_variant import ProductVariant
+from app.models.product_color import ProductColor
 from app.models.user import User
 
 
@@ -56,6 +57,26 @@ def test_product_variants_are_admin_managed_and_member_readable():
             )
             assert created.status_code == 201, created.text
             assert created.json()["display_name"] == "12GB + 256GB"
+
+            color = client.post(
+                f"/api/products/{product_id}/colors",
+                headers=admin,
+                json={"color_name": "曜金黑"},
+            )
+            assert color.status_code == 201, color.text
+            color_list = client.get(f"/api/products/{product_id}/colors", headers=member)
+            assert [row["color_name"] for row in color_list.json()] == ["曜金黑"]
+            duplicate_color = client.post(
+                f"/api/products/{product_id}/colors",
+                headers=admin,
+                json={"color_name": "曜金黑"},
+            )
+            assert duplicate_color.status_code == 409
+
+            product_card = client.get("/api/products", headers=member)
+            assert product_card.status_code == 200
+            assert product_card.json()[0]["variants_count"] == 1
+            assert product_card.json()[0]["colors_count"] == 1
             variant_id = created.json()["id"]
 
             base_price = client.post(
