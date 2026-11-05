@@ -144,7 +144,7 @@ main{padding:0 8px}
 <div id="detail-policy-note" class="detail-policy hidden"></div>
 <div id="detail-official" class="official-reference">官网参考价：暂未接入官网价格档案</div>
 <div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div>
-<div class="actions" style="margin-top:12px"><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策价</button></div>
+<div class="actions" style="margin-top:12px"><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-color" class="secondary hidden" type="button">新增颜色</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策价</button></div>
 </div>
 <div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div><button id="new-price-btn">新增价格</button></div><div class="grid" style="margin:12px 0"><div class="field"><label>开始日期</label><input id="price-start" type="date"></div><div class="field"><label>结束日期</label><input id="price-end" type="date"></div><div class="field"><label>按月查询</label><input id="price-month" type="month"></div><div class="field"><label>按年查询</label><input id="price-year" type="number" min="2000" max="2100" placeholder="例如 2026"></div><div class="field"><label>指定日期（查询当日及之前记录）</label><input id="price-asof" type="date"></div><div class="field" style="justify-content:end"><button id="filter-prices-btn" class="secondary">筛选历史</button><button id="clear-price-filter-btn" class="secondary">清除筛选</button></div></div>
 <div id="price-form-panel" class="hidden"><form id="price-form" class="field"><div class="grid">
@@ -276,24 +276,27 @@ function renderProductCards(){
   const brandEl=document.createElement("div");brandEl.className="brand";brandEl.textContent=p.brand;
   const name=document.createElement("strong");name.textContent=p.model;
   const intro=document.createElement("div");intro.className="sub";intro.textContent=p.intro||"商品资料待完善";
+  const counts=document.createElement("div");counts.className="sub";counts.textContent=(p.variants_count||0)+"种配置 · "+(p.colors_count||0)+"种颜色";
   const price=document.createElement("div");price.className="from";price.textContent="查看配置与报价";
-  card.append(brandEl,name,intro,price);card.onclick=()=>openProductDetail(p);card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openProductDetail(p)}};
+  card.append(brandEl,name,intro,counts,price);card.onclick=()=>openProductDetail(p);card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openProductDetail(p)}};
   body.append(card);
  });
 }
 async function openProductDetail(p){
- currentProduct=p;selectedVariant="";$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");
+ currentProduct=p;selectedVariant="";$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");$("#detail-add-color").classList.toggle("hidden",me?.role!=="admin");
  $("#product-detail").classList.remove("hidden");$("#products").parentElement.classList.add("hidden");
  $("#detail-brand").textContent=p.brand;$("#detail-name").textContent=p.model;$("#detail-intro").textContent=p.intro||"";
  $("#detail-colors").textContent="";
  try{
-  const [prices,rebates,policies,registeredVariants]=await Promise.all([
+  const [prices,rebates,policies,registeredVariants,colors]=await Promise.all([
    api("/products/"+p.id+"/prices"),
    api("/products/"+p.id+"/st-rebates"),
    api("/policies?month="+currentMonthKey()+"-01"),
-   api("/products/"+p.id+"/variants")
+   api("/products/"+p.id+"/variants"),
+   api("/products/"+p.id+"/colors")
   ]);
-  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants};
+  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants,colors};
+  $("#detail-colors").textContent=colors.length?"厂家颜色："+colors.map(x=>x.color_name).join("、"):"厂家颜色：暂未登记";
   const variants=[...new Set([...registeredVariants.map(x=>x.display_name),...prices.map(x=>x.variant),...rebates.map(x=>x.variant),...detailCache.policies.map(x=>x.variant)])];
   variants.sort((a,b)=>a.localeCompare(b,"zh-CN", {numeric:true}));
   if(!variants.length)variants.push("尚未录入配置");
@@ -327,12 +330,17 @@ function chooseVariant(v){
 }
 $("#back-products").onclick=()=>{$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden")};
 $("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");
+$("#detail-add-color").onclick=async()=>{
+ if(!currentProduct||me?.role!=="admin")return;
+ const color_name=prompt("请输入厂家公开颜色名称");if(color_name===null)return;
+ try{await api("/products/"+currentProduct.id+"/colors",{method:"POST",body:JSON.stringify({color_name})});await openProductDetail(currentProduct);await loadProducts();showMessage("颜色已添加")}catch(e){showMessage(e.message,true)}
+};
 $("#detail-add-variant").onclick=async()=>{
  if(!currentProduct||me?.role!=="admin")return;
  const display_name=prompt("请输入配置名称，例如 12GB+256GB");if(display_name===null)return;
  const ram=prompt("运行内存（选填，例如 12GB）")||null;
  const storage=prompt("存储容量（选填，例如 256GB）")||null;
- try{await api("/products/"+currentProduct.id+"/variants",{method:"POST",body:JSON.stringify({display_name,ram,storage})});await openProductDetail(currentProduct);showMessage("配置已添加")}catch(e){showMessage(e.message,true)}
+ try{await api("/products/"+currentProduct.id+"/variants",{method:"POST",body:JSON.stringify({display_name,ram,storage})});await openProductDetail(currentProduct);await loadProducts();showMessage("配置已添加")}catch(e){showMessage(e.message,true)}
 };
 async function fillVariantSelect(selector, preferred){
  const select=$(selector);select.replaceChildren(new Option("请选择配置",""));
