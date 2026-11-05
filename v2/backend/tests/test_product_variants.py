@@ -86,6 +86,27 @@ def test_product_variants_are_admin_managed_and_member_readable():
             assert listed.status_code == 200
             assert [row["display_name"] for row in listed.json()] == ["12GB + 256GB"]
 
+            unknown_price = client.post(
+                f"/api/products/{product_id}/prices",
+                headers=member,
+                json={"variant": "16GB + 512GB", "price_type": "基础价格", "price": "3999.00", "effective_date": "2026-11-05"},
+            )
+            assert unknown_price.status_code == 422
+
+            unknown_rebate = client.post(
+                f"/api/products/{product_id}/st-rebates",
+                headers=member,
+                json={"variant": "16GB + 512GB", "amount": "100.00", "effective_date": "2026-11-05"},
+            )
+            assert unknown_rebate.status_code == 422
+
+            unknown_policy = client.post(
+                "/api/policies",
+                headers=member,
+                json={"product_id": product_id, "variant": "16GB + 512GB", "effective_date": "2026-11-05", "policy_price": "2799.00", "interpretation": "测试政策内容和适用范围"},
+            )
+            assert unknown_policy.status_code == 422
+
             denied = client.post(
                 f"/api/products/{product_id}/variants",
                 headers=member,
