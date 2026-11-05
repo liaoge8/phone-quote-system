@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
+from app.core.time import BUSINESS_TZ
+from app.models.policy_price import PolicyPrice
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, require_admin
@@ -27,15 +29,24 @@ def list_products(db: Session = Depends(get_db), user: User = Depends(get_curren
     color_count = select(func.count(ProductColor.id)).where(
         ProductColor.product_id == Product.id,
     ).scalar_subquery()
+    today = utc_now().astimezone(BUSINESS_TZ).date()
+    month_start = today.replace(day=1)
+    policy_from = select(func.min(PolicyPrice.policy_price)).where(
+        PolicyPrice.product_id == Product.id,
+        PolicyPrice.effective_month == month_start,
+        PolicyPrice.effective_date <= today,
+        PolicyPrice.voided_at.is_(None),
+    ).scalar_subquery()
     stmt = (
-        select(Product, variant_count.label("variants_count"), color_count.label("colors_count"))
+        select(Product, variant_count.label("variants_count"), color_count.label("colors_count"), policy_from.label("current_policy_from"))
         .where(Product.archived_at.is_(None), Product.status == "on_sale")
         .order_by(Product.id.desc())
     )
     return [
         {"id": p.id, "brand": p.brand, "model": p.model, "intro": p.intro,
-         "status": p.status, "variants_count": variants, "colors_count": colors}
-        for p, variants, colors in db.execute(stmt).all()
+         "status": p.status, "variants_count": variants, "colors_count": colors,
+         "current_policy_from": policy_price}
+        for p, variants, colors, policy_price in db.execute(stmt).all()
     ]
 
 
