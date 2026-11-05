@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -9,6 +9,15 @@ from app.db.base import Base
 
 class PolicyPrice(Base):
     __tablename__ = "policy_prices"
+    __table_args__ = (
+        Index(
+            "uq_policy_prices_active_product_variant_month",
+            "product_id", "variant", "effective_month",
+            unique=True,
+            sqlite_where=__import__("sqlalchemy").text("voided_at IS NULL"),
+            postgresql_where=__import__("sqlalchemy").text("voided_at IS NULL"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="RESTRICT"), index=True, nullable=False)
