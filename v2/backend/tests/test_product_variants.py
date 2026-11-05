@@ -56,6 +56,31 @@ def test_product_variants_are_admin_managed_and_member_readable():
             )
             assert created.status_code == 201, created.text
             assert created.json()["display_name"] == "12GB + 256GB"
+            variant_id = created.json()["id"]
+
+            base_price = client.post(
+                f"/api/products/{product_id}/prices",
+                headers=member,
+                json={"variant": "12GB + 256GB", "price_type": "基础价格", "price": "2999.00", "effective_date": "2026-11-05"},
+            )
+            assert base_price.status_code == 201, base_price.text
+            assert base_price.json()["variant_id"] == variant_id
+
+            rebate = client.post(
+                f"/api/products/{product_id}/st-rebates",
+                headers=member,
+                json={"variant": "12GB + 256GB", "amount": "100.00", "effective_date": "2026-11-05"},
+            )
+            assert rebate.status_code == 201, rebate.text
+            assert rebate.json()["variant_id"] == variant_id
+
+            policy = client.post(
+                "/api/policies",
+                headers=member,
+                json={"product_id": product_id, "variant": "12GB + 256GB", "effective_date": "2026-11-05", "policy_price": "2799.00", "interpretation": "测试政策内容和适用范围"},
+            )
+            assert policy.status_code == 201, policy.text
+            assert policy.json()["variant_id"] == variant_id
 
             listed = client.get(f"/api/products/{product_id}/variants", headers=member)
             assert listed.status_code == 200
