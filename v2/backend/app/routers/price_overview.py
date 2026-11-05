@@ -1,7 +1,9 @@
+import csv
 from datetime import date
-from decimal import Decimal
+from io import StringIO
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,7 +19,7 @@ router = APIRouter()
 
 
 @router.get("/price-overview")
-def price_overview(as_of: date | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def price_overview(as_of: date | None = None, export: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     cutoff = as_of or date.today()
     products = list(db.scalars(
         select(Product).where(Product.archived_at.is_(None), Product.status == "on_sale").order_by(Product.brand, Product.model)
@@ -77,4 +79,25 @@ def price_overview(as_of: date | None = None, db: Session = Depends(get_db), use
             "policy_effective_date": policy.effective_date if policy else None,
         })
     items.sort(key=lambda x: (x["brand"], x["model"], x["variant"]))
+    if export:
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["品牌", "机型", "配置", "基础价格", "基础价格生效日期", "ST返利", "ST返利生效日期", "政策价", "政策价生效日期"])
+        for item in items:
+            writer.writerow([
+                item["brand"], item["model"], item["variant"],
+                str(item["base_price"]) if item["base_price"] is not None else "",
+                item["base_effective_date"] or "",
+                str(item["st_rebate"]) if item["st_rebate"] is not None else "",
+                item["st_rebate_effective_date"] or "",
+                str(item["policy_price"]) if item["policy_price"] is not None else "",
+                item["policy_effective_date"] or "",
+            ])
+        output.seek(0)
+        filename = f"phone-price-overview-{cutoff.isoformat()}.csv"
+        return StreamingResponse(
+            iter([output.getvalue().encode("utf-8-sig")]),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
     return {"as_of": cutoff, "items": items}
