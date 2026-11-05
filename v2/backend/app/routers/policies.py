@@ -137,7 +137,7 @@ async def upload_policy_evidence(
     stored_path.write_bytes(content)
     evidence = PolicyEvidence(
         policy_price_id=record.id,
-        original_filename=Path(file.filename or "policy-evidence").name[:255],
+        original_filename=Path((file.filename or "policy-evidence").replace("\\", "/")).name[:255],
         storage_key=storage_key,
         content_type=file.content_type,
         file_size=len(content),
