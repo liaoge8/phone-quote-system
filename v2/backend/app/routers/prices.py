@@ -29,7 +29,14 @@ def add_price(product_id: int, body: PriceRecordCreate, db: Session = Depends(ge
 
 
 @router.get('/products/{product_id}/prices', response_model=list[PriceRecordOut])
-def list_prices(product_id: int, start: date | None = None, end: date | None = None, as_of: date | None = None, include_voided: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def list_prices(product_id: int, start: date | None = None, end: date | None = None, as_of: date | None = None, month: date | None = None, year: int | None = None, include_voided: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    selected_modes = sum(value is not None for value in (as_of, month, year))
+    if selected_modes > 1 or (selected_modes and (start or end)):
+        raise HTTPException(422, '指定日期、月份、年份与日期区间不可同时使用')
+    if month and month.day != 1:
+        raise HTTPException(422, 'month 必须传当月第一天，例如 2026-11-01')
+    if year is not None and not 2000 <= year <= 2100:
+        raise HTTPException(422, 'year 必须在 2000 到 2100 之间')
     if start and end and start > end:
         raise HTTPException(422, '开始日期不能晚于结束日期')
     if include_voided and user.role != 'admin':
@@ -41,6 +48,11 @@ def list_prices(product_id: int, start: date | None = None, end: date | None = N
         stmt = stmt.where(PriceRecord.voided_at.is_(None))
     if as_of:
         stmt = stmt.where(PriceRecord.effective_date <= as_of)
+    elif month:
+        next_month = date(month.year + (month.month == 12), month.month % 12 + 1, 1)
+        stmt = stmt.where(PriceRecord.effective_date >= month, PriceRecord.effective_date < next_month)
+    elif year is not None:
+        stmt = stmt.where(PriceRecord.effective_date >= date(year, 1, 1), PriceRecord.effective_date < date(year + 1, 1, 1))
     else:
         if start:
             stmt = stmt.where(PriceRecord.effective_date >= start)
