@@ -183,9 +183,16 @@ def get_policy_evidence_file(
     evidence = db.get(PolicyEvidence, evidence_id)
     if not evidence:
         raise HTTPException(404, "证据文件不存在")
-    path = Path(settings.policy_evidence_dir) / evidence.storage_key
+    storage_dir = Path(settings.policy_evidence_dir).resolve()
+    path = (storage_dir / evidence.storage_key).resolve()
+    if path.parent != storage_dir:
+        raise HTTPException(500, "证据文件存储路径异常")
     if not path.is_file():
         raise HTTPException(404, "证据文件缺失，请检查持久化存储")
+    # Verify the persisted bytes against the upload-time digest before serving evidence.
+    actual_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+    if actual_sha256 != evidence.sha256:
+        raise HTTPException(500, "证据文件完整性校验失败，请从备份恢复")
     return FileResponse(path, media_type=evidence.content_type, filename=evidence.original_filename)
 
 
