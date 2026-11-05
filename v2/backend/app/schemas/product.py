@@ -7,6 +7,8 @@ class ProductCreate(BaseModel):
     brand: str = Field(min_length=1, max_length=40)
     model: str = Field(min_length=1, max_length=100)
     intro: str | None = None
+    tagline: str | None = Field(default=None, max_length=160)
+    selling_points: list[str] = Field(default_factory=list, max_length=8)
 
     @field_validator("brand", "model")
     @classmethod

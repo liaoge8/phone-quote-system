@@ -126,7 +126,7 @@ main{padding:0 8px}
 <div id="overview-panel" class="panel hidden"><div class="toolbar"><div><h2>手机价格总览</h2><div class="muted" id="overview-date">按生效日期展示当前有效价格</div></div><div class="actions"><button class="secondary" id="refresh-overview-btn">刷新</button><button class="secondary" id="export-overview-btn">导出CSV</button><button id="capture-overview-btn">打印 / 保存PDF</button><button class="secondary" id="close-overview-btn">关闭</button></div></div><div class="tablewrap"><table><thead><tr><th>品牌</th><th>机型</th><th>配置</th><th>基础价格</th><th>ST返利</th><th>政策价</th><th>政策解释</th><th>基础价日期</th><th>返利日期</th><th>政策日期</th></tr></thead><tbody id="overview-rows"></tbody></table></div><div class="muted" style="margin-top:8px">ST返利无记录时显示「—」；基础价格、ST返利、政策价为独立口径。</div></div>\n<div id="product-form-panel" class="panel hidden">
 <h2>新增商品</h2><form id="product-form" class="field">
 <div class="grid"><div class="field"><label>品牌</label><input name="brand" maxlength="40" required placeholder="例如：华为"></div><div class="field"><label>型号</label><input name="model" maxlength="100" required placeholder="例如：Mate 系列"></div></div>
-<div class="field"><label>商品简介（选填）</label><textarea name="intro" maxlength="2000"></textarea></div>
+<div class="field"><label>一句话介绍（选填）</label><input name="tagline" maxlength="160" placeholder="简短描述商品定位或亮点"></div><div class="field"><label>商品简介（选填）</label><textarea name="intro" maxlength="2000"></textarea></div><div class="field"><label>核心卖点（每行一条，最多8条）</label><textarea name="selling_points" placeholder="例如：大容量电池\n高刷新率屏幕"></textarea></div>
 <div class="actions"><button type="submit">保存商品</button><button type="button" class="secondary" id="cancel-product">取消</button></div>
 </form></div>
 <div id="archived-panel" class="panel hidden"><div class="toolbar"><h2>已停用商品</h2><button class="secondary" id="close-archived-btn">关闭</button></div><div class="tablewrap"><table><thead><tr><th>品牌</th><th>型号</th><th>停用原因</th><th>停用时间</th><th>操作</th></tr></thead><tbody id="archived-products"></tbody></table></div><div id="empty-archived" class="empty hidden">暂无已停用商品。</div></div>
@@ -137,7 +137,7 @@ main{padding:0 8px}
 </div>
 <div id="product-detail" class="panel hidden">
 <div class="detail-head"><div><div class="muted" id="detail-brand"></div><div class="detail-title" id="detail-name"></div></div><button class="secondary" id="back-products" type="button">返回</button></div>
-<div id="detail-intro" class="muted" style="margin-top:7px"></div>
+<div id="detail-tagline" style="font-size:13px;font-weight:600;margin-top:7px"></div><div id="detail-intro" class="muted" style="margin-top:5px"></div><ul id="detail-selling-points" class="muted" style="margin:6px 0 0;padding-left:18px"></ul>
 <div style="margin-top:12px"><div class="muted">选择配置</div><div id="detail-variants" class="variant-pills"></div><div id="detail-colors" class="muted"></div></div>
 <div class="detail-price"><div class="label">当前政策后价格</div><div id="detail-policy-price" class="amount">暂无报价</div></div>
 <div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div>
@@ -285,7 +285,7 @@ function renderProductCards(){
 async function openProductDetail(p){
  currentProduct=p;selectedVariant="";$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");$("#detail-add-color").classList.toggle("hidden",me?.role!=="admin");
  $("#product-detail").classList.remove("hidden");$("#products").parentElement.classList.add("hidden");
- $("#detail-brand").textContent=p.brand;$("#detail-name").textContent=p.model;$("#detail-intro").textContent=p.intro||"";
+ $("#detail-brand").textContent=p.brand;$("#detail-name").textContent=p.model;$("#detail-tagline").textContent=p.tagline||"";$("#detail-intro").textContent=p.intro||"";const points=$("#detail-selling-points");points.replaceChildren();(p.selling_points||[]).forEach(point=>{const li=document.createElement("li");li.textContent=point;points.append(li)});
  $("#detail-colors").textContent="";
  try{
   const [prices,rebates,policies,registeredVariants,colors]=await Promise.all([
@@ -378,7 +378,7 @@ $("#close-overview-btn").onclick=()=>{$("#overview-panel").classList.add("hidden
 $("#capture-overview-btn").onclick=()=>{document.body.classList.add("print-overview");window.print();setTimeout(()=>document.body.classList.remove("print-overview"),500)};
 $("#new-product-btn").onclick=()=>$("#product-form-panel").classList.toggle("hidden");
 $("#cancel-product").onclick=()=>$("#product-form-panel").classList.add("hidden");
-$("#product-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/products",{method:"POST",body:JSON.stringify({brand:f.get("brand"),model:f.get("model"),intro:f.get("intro")||null})});e.currentTarget.reset();$("#product-form-panel").classList.add("hidden");showMessage("商品已保存");await loadProducts()}catch(err){showMessage(err.message,true)}});
+$("#product-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/products",{method:"POST",body:JSON.stringify({brand:f.get("brand"),model:f.get("model"),intro:f.get("intro")||null,tagline:f.get("tagline")||null,selling_points:String(f.get("selling_points")||"").split("\\n").map(x=>x.trim()).filter(Boolean)})});e.currentTarget.reset();$("#product-form-panel").classList.add("hidden");showMessage("商品已保存");await loadProducts()}catch(err){showMessage(err.message,true)}});
 $("#new-st-btn").onclick=()=>$("#st-form-panel").classList.toggle("hidden");
 $("#cancel-st").onclick=()=>$("#st-form-panel").classList.add("hidden");
 $("#st-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/products/"+currentProduct.id+"/st-rebates",{method:"POST",body:JSON.stringify({variant:f.get("variant"),amount:f.get("amount"),effective_date:f.get("effective_date"),note:f.get("note")||null})});e.currentTarget.reset();$("#st-form-panel").classList.add("hidden");await loadST();showMessage("ST返利记录已保存")}catch(err){showMessage(err.message,true)}});

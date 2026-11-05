@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 class Product(Base):
@@ -8,6 +8,8 @@ class Product(Base):
     brand: Mapped[str] = mapped_column(String(40), index=True, nullable=False)
     model: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
     intro: Mapped[str | None] = mapped_column(Text)
+    tagline: Mapped[str | None] = mapped_column(String(160))
+    selling_points: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     status: Mapped[str] = mapped_column(String(20), default='on_sale', nullable=False)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     archived_by: Mapped[int | None] = mapped_column(ForeignKey('users.id', ondelete='RESTRICT'))
