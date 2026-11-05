@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.main import app
 from app.models.audit_log import AuditLog
 from app.models.product import Product
+from app.models.product_variant import ProductVariant
 from app.models.user import User
 
 
@@ -38,6 +39,8 @@ def client():
         db.flush()
         product = Product(brand="华为", model="测试机")
         db.add(product)
+        db.flush()
+        db.add(ProductVariant(product_id=product.id, display_name="12+256G"))
         db.commit()
         product_id = product.id
         admin_id = admin.id

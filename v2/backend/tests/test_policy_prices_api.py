@@ -12,6 +12,7 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from app.models.product import Product
+from app.models.product_variant import ProductVariant
 from app.models.user import User
 from app.routers.policies import current_business_month
 
@@ -35,6 +36,8 @@ def policy_client():
         member = User(username="policy_member", password_hash=hash_password("member-password-123"), role="member")
         product = Product(brand="华为", model="政策价测试机")
         db.add_all([admin, member, product])
+        db.flush()
+        db.add(ProductVariant(product_id=product.id, display_name="12+256G"))
         db.commit()
         ids = (product.id, admin.id, member.id)
 

@@ -9,6 +9,7 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from app.models.product import Product
+from app.models.product_variant import ProductVariant
 from app.models.user import User
 
 
@@ -33,6 +34,8 @@ def client():
         db.flush()
         product = Product(brand="华为", model="ST测试机")
         db.add(product)
+        db.flush()
+        db.add(ProductVariant(product_id=product.id, display_name="12+256G"))
         db.commit()
         ids = (product.id, admin.id, member.id)
     with TestClient(app) as test_client:
