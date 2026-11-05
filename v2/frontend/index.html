@@ -76,6 +76,37 @@ main{padding:0 8px}
 #overview-panel th,#overview-panel td{padding:6px 1px}
 #app>.toolbar .actions button{font-size:12px;padding:9px 7px}
 }
+
+/* Product-first mobile layout */
+.product-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin:0 0 12px}
+.product-tools input,.product-tools select{width:100%;min-width:0;border:1px solid #ccd5e2;border-radius:10px;padding:11px 12px;background:#fff;font:inherit}
+.product-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.product-card{border:1px solid #e2e8f0;border-radius:13px;padding:13px;background:#fff;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s}
+.product-card:active{border-color:#2457d6;box-shadow:0 2px 10px #2457d61c}
+.product-card .brand{font-size:12px;color:#6b7688;margin-bottom:4px}
+.product-card strong{font-size:16px;display:block;overflow-wrap:anywhere}
+.product-card .sub{font-size:12px;color:#6b7688;margin-top:7px;line-height:1.5}
+.product-card .from{font-size:14px;font-weight:700;color:#176b48;margin-top:9px}
+.detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.detail-title{font-size:21px;font-weight:750;line-height:1.25}
+.variant-pills{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 5px}
+.variant-pill{background:#f1f4f8;color:#334155;border:1px solid #dce3ec;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:650;min-height:30px}
+.variant-pill.active{background:#e8f3ed;color:#176b48;border-color:#4b9b75}
+.detail-price{padding:12px 0 8px}
+.detail-price .label{font-size:12px;color:#68758a}
+.detail-price .amount{font-size:32px;font-weight:800;line-height:1.25;color:#176b48;margin-top:3px}
+.detail-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.detail-metric{background:#f5f7fa;border-radius:9px;padding:9px 11px}
+.detail-metric span{display:block;color:#6b7688;font-size:11px;margin-bottom:3px}
+.detail-metric strong{font-size:15px}
+.detail-policy{font-size:13px;line-height:1.55;background:#f7f8fa;border-radius:9px;padding:9px 11px;margin:8px 0}
+.official-reference{font-size:11px;color:#7b8492;margin:9px 0 3px}
+.detail-history{border-top:1px solid #e9edf2;margin-top:8px;padding-top:10px}
+.history-row{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #edf0f4;font-size:12px}
+.history-row .muted{font-size:11px}
+.hidden{display:none!important}
+@media(max-width:680px){.product-cards{grid-template-columns:1fr}.product-tools{grid-template-columns:minmax(0,1fr) 112px}.product-card{padding:12px}.detail-title{font-size:19px}.detail-price .amount{font-size:30px}}
+
 </style>
 </head>
 <body>
@@ -99,7 +130,22 @@ main{padding:0 8px}
 <div class="actions"><button type="submit">保存商品</button><button type="button" class="secondary" id="cancel-product">取消</button></div>
 </form></div>
 <div id="archived-panel" class="panel hidden"><div class="toolbar"><h2>已停用商品</h2><button class="secondary" id="close-archived-btn">关闭</button></div><div class="tablewrap"><table><thead><tr><th>品牌</th><th>型号</th><th>停用原因</th><th>停用时间</th><th>操作</th></tr></thead><tbody id="archived-products"></tbody></table></div><div id="empty-archived" class="empty hidden">暂无已停用商品。</div></div>
-<div class="panel"><div id="message" class="notice hidden"></div><div class="tablewrap"><table><thead><tr><th>品牌</th><th>型号</th><th>简介</th><th>操作</th></tr></thead><tbody id="products"></tbody></table></div><div id="empty-products" class="empty hidden">暂无商品，请新增商品档案。</div></div>
+<div class="panel">
+<div id="message" class="notice hidden"></div>
+<div class="product-tools"><input id="product-search" type="search" placeholder="搜索完整型号或商品名称"><select id="brand-filter"><option value="">全部品牌</option></select></div>
+<div id="products" class="product-cards"></div><div id="empty-products" class="empty hidden">暂无匹配商品，请新增商品档案。</div>
+</div>
+<div id="product-detail" class="panel hidden">
+<div class="detail-head"><div><div class="muted" id="detail-brand"></div><div class="detail-title" id="detail-name"></div></div><button class="secondary" id="back-products" type="button">返回</button></div>
+<div id="detail-intro" class="muted" style="margin-top:7px"></div>
+<div style="margin-top:12px"><div class="muted">选择配置</div><div id="detail-variants" class="variant-pills"></div><div id="detail-colors" class="muted"></div></div>
+<div class="detail-price"><div class="label">当前政策后价格</div><div id="detail-policy-price" class="amount">暂无报价</div></div>
+<div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div>
+<div id="detail-policy-note" class="detail-policy hidden"></div>
+<div id="detail-official" class="official-reference">官网参考价：暂未接入官网价格档案</div>
+<div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div>
+<div class="actions" style="margin-top:12px"><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策价</button></div>
+</div>
 <div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div><button id="new-price-btn">新增价格</button></div><div class="grid" style="margin:12px 0"><div class="field"><label>开始日期</label><input id="price-start" type="date"></div><div class="field"><label>结束日期</label><input id="price-end" type="date"></div><div class="field"><label>按月查询</label><input id="price-month" type="month"></div><div class="field"><label>按年查询</label><input id="price-year" type="number" min="2000" max="2100" placeholder="例如 2026"></div><div class="field"><label>指定日期（查询当日及之前记录）</label><input id="price-asof" type="date"></div><div class="field" style="justify-content:end"><button id="filter-prices-btn" class="secondary">筛选历史</button><button id="clear-price-filter-btn" class="secondary">清除筛选</button></div></div>
 <div id="price-form-panel" class="hidden"><form id="price-form" class="field"><div class="grid">
 <div class="field"><label>版本 / 配置</label><input name="variant" maxlength="100" required placeholder="如 12GB+256GB"></div>
@@ -207,11 +253,83 @@ async function loadOverview(){const data=await api("/price-overview");const body
 async function loadArchivedProducts(){const rows=await api("/products/archived");const body=$("#archived-products");body.replaceChildren();$("#empty-archived").classList.toggle("hidden",rows.length!==0);rows.forEach(p=>{const tr=document.createElement("tr");[p.brand,p.model,p.archive_reason||"—",p.archived_at?new Date(p.archived_at).toLocaleString():"—"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});const td=document.createElement("td"),restore=document.createElement("button");restore.textContent="恢复商品";restore.onclick=async()=>{if(!confirm("确认恢复 "+p.brand+" "+p.model+"？原价格历史会继续保留。"))return;try{await api("/products/"+p.id+"/restore",{method:"POST"});await loadArchivedProducts();await loadProducts();showMessage("商品已恢复")}catch(e){showMessage(e.message,true)}};td.append(restore);tr.append(td);body.append(tr)})}
 $("#archived-products-btn").onclick=async()=>{if(me.role!=="admin"){showMessage("无权查看已停用商品",true);return}try{$("#archived-panel").classList.remove("hidden");await loadArchivedProducts();$("#archived-panel").scrollIntoView({behavior:"smooth",block:"start"})}catch(e){showMessage(e.message,true)}};
 $("#close-archived-btn").onclick=()=>$("#archived-panel").classList.add("hidden");
-async function loadProducts(){const rows=await api("/products");const body=$("#products");body.replaceChildren();$("#empty-products").classList.toggle("hidden",rows.length!==0);
- rows.forEach(p=>{const tr=document.createElement("tr");const cells=[p.brand,p.model,p.intro||"—"];cells.forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});const td=document.createElement("td"),b=document.createElement("button");b.className="secondary";b.textContent="查看价格";b.onclick=()=>openPrices(p);td.append(b);const stButton=document.createElement("button");stButton.className="secondary";stButton.style.marginLeft="6px";stButton.textContent="ST返利";stButton.onclick=()=>openST(p);td.append(stButton);const policyButton=document.createElement("button");policyButton.className="secondary";policyButton.style.marginLeft="6px";policyButton.textContent="政策价";policyButton.onclick=()=>openPolicies(p);td.append(policyButton);
- if(me.role==="admin"){const archive=document.createElement("button");archive.className="danger";archive.style.marginLeft="6px";archive.textContent="停用";archive.onclick=async()=>{const reason=prompt("请输入停用原因（至少5个字）。该商品价格历史将保留。");if(reason===null)return;if(reason.trim().length<5){alert("停用原因至少5个字");return}if(!confirm("确认停用该商品？历史价格记录不会删除。"))return;try{const result=await api("/products/"+p.id+"/archive",{method:"PATCH",body:JSON.stringify({reason})});showMessage(result.message);if(currentProduct?.id===p.id)$("#price-panel").classList.add("hidden");await loadProducts()}catch(e){showMessage(e.message,true)}};td.append(archive)}
- tr.append(td);body.append(tr)});
+let productRows=[];
+let selectedVariant="";
+let detailCache={};
+function money(v){return v==null?"—":"¥"+Number(v).toFixed(2)}
+function currentMonthKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+async function loadProducts(){
+ productRows=await api("/products");
+ const brands=[...new Set(productRows.map(p=>p.brand))].sort((a,b)=>a.localeCompare(b,"zh-CN"));
+ const filter=$("#brand-filter"),old=filter.value;filter.replaceChildren(new Option("全部品牌",""));
+ brands.forEach(b=>filter.add(new Option(b,b)));if(brands.includes(old))filter.value=old;
+ renderProductCards();
 }
+function renderProductCards(){
+ const q=($("#product-search")?.value||"").trim().toLowerCase(),brand=$("#brand-filter")?.value||"";
+ const body=$("#products");body.replaceChildren();
+ const normalized=s=>String(s||"").toLowerCase().replace(/[\\s_-]+/g,"");
+ const rows=productRows.filter(p=>(!brand||p.brand===brand)&&(!q||normalized(p.model).includes(normalized(q))||normalized(p.brand+" "+p.model).includes(normalized(q))||normalized(p.intro).includes(normalized(q))));
+ $("#empty-products").classList.toggle("hidden",rows.length!==0);
+ rows.forEach(p=>{
+  const card=document.createElement("article");card.className="product-card";card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","打开 "+p.brand+" "+p.model);
+  const brandEl=document.createElement("div");brandEl.className="brand";brandEl.textContent=p.brand;
+  const name=document.createElement("strong");name.textContent=p.model;
+  const intro=document.createElement("div");intro.className="sub";intro.textContent=p.intro||"商品资料待完善";
+  const price=document.createElement("div");price.className="from";price.textContent="查看配置与报价";
+  card.append(brandEl,name,intro,price);card.onclick=()=>openProductDetail(p);card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openProductDetail(p)}};
+  body.append(card);
+ });
+}
+async function openProductDetail(p){
+ currentProduct=p;selectedVariant="";
+ $("#product-detail").classList.remove("hidden");$("#products").parentElement.classList.add("hidden");
+ $("#detail-brand").textContent=p.brand;$("#detail-name").textContent=p.model;$("#detail-intro").textContent=p.intro||"";
+ $("#detail-colors").textContent="";
+ try{
+  const [prices,rebates,policies]=await Promise.all([
+   api("/products/"+p.id+"/prices"),
+   api("/products/"+p.id+"/st-rebates"),
+   api("/policies?month="+currentMonthKey()+"-01")
+  ]);
+  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id)};
+  const variants=[...new Set([...prices.map(x=>x.variant),...rebates.map(x=>x.variant),...detailCache.policies.map(x=>x.variant)])];
+  variants.sort((a,b)=>a.localeCompare(b,"zh-CN", {numeric:true}));
+  if(!variants.length)variants.push("尚未录入配置");
+  renderVariantPills(variants);
+  chooseVariant(variants[0]);
+ }catch(e){showMessage(e.message,true)}
+}
+function renderVariantPills(variants){
+ const box=$("#detail-variants");box.replaceChildren();
+ variants.forEach(v=>{const b=document.createElement("button");b.type="button";b.className="variant-pill"+(v===selectedVariant?" active":"");b.textContent=v;b.onclick=()=>chooseVariant(v);box.append(b)});
+}
+function chooseVariant(v){
+ selectedVariant=v;$("#detail-variants").querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.textContent===v));
+ const prices=detailCache.prices||[],rebates=detailCache.rebates||[],policies=detailCache.policies||[];
+ const bases=prices.filter(x=>x.variant===v&&x.price_type==="基础价格"&&!x.voided_at).sort((a,b)=>b.effective_date.localeCompare(a.effective_date)||b.id-a.id);
+ const sts=rebates.filter(x=>x.variant===v&&!x.voided_at).sort((a,b)=>b.effective_date.localeCompare(a.effective_date)||b.id-a.id);
+ const pol=policies.filter(x=>x.variant===v&&!x.voided_at).sort((a,b)=>b.effective_date.localeCompare(a.effective_date)||b.id-a.id)[0];
+ const base=bases[0],st=sts[0];
+ $("#detail-policy-price").textContent=pol?money(pol.policy_price):"暂无报价";
+ $("#detail-base").textContent=base?money(base.price):"—";
+ $("#detail-rebate").textContent=st?money(st.amount):"—";
+ const note=$("#detail-policy-note");note.textContent=pol?("政策解读："+pol.interpretation+(pol.note?"；"+pol.note:"")):"当前月份暂无该配置政策记录";note.classList.toggle("hidden",!pol);
+ const hist=$("#detail-history-rows");hist.replaceChildren();
+ const history=[
+  ...prices.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:x.price_type,amount:x.price,voided:x.voided_at})),
+  ...rebates.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:"ST返利",amount:x.amount,voided:x.voided_at})),
+  ...policies.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:"政策价",amount:x.policy_price,voided:x.voided_at}))
+ ].sort((a,b)=>b.date.localeCompare(a.date));
+ if(!history.length){const empty=document.createElement("div");empty.className="muted";empty.style.padding="12px 0";empty.textContent="该配置暂无价格历史记录";hist.append(empty)}
+ history.forEach(r=>{const row=document.createElement("div");row.className="history-row";const d=document.createElement("span");d.textContent=r.date;const t=document.createElement("span");t.textContent=r.type+(r.voided?" · 已作废":"");const a=document.createElement("strong");a.textContent=money(r.amount);row.append(d,t,a);hist.append(row)});
+}
+$("#back-products").onclick=()=>{$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden")};
+$("#detail-add-price").onclick=()=>{if(!currentProduct)return;$("#product-detail").classList.add("hidden");openPrices(currentProduct).then(()=>{$("#price-form-panel").classList.remove("hidden");$("#price-form [name=variant]").value=selectedVariant==="尚未录入配置"?"":selectedVariant})};
+$("#detail-add-rebate").onclick=()=>{if(!currentProduct)return;$("#product-detail").classList.add("hidden");openST(currentProduct).then(()=>{$("#st-form-panel").classList.remove("hidden");$("#st-form [name=variant]").value=selectedVariant==="尚未录入配置"?"":selectedVariant})};
+$("#detail-add-policy").onclick=()=>{if(!currentProduct)return;$("#product-detail").classList.add("hidden");openPolicies(currentProduct).then(()=>{$("#policy-form-panel").classList.remove("hidden");$("#policy-form [name=variant]").value=selectedVariant==="尚未录入配置"?"":selectedVariant})};
+$("#product-search").addEventListener("input",renderProductCards);$("#brand-filter").addEventListener("change",renderProductCards);
+
 async function openPrices(p){currentProduct=p;$("#policy-panel").classList.add("hidden");$("#price-title").textContent=p.brand+" "+p.model+" · 价格历史";$("#price-panel").classList.remove("hidden");$("#price-form-panel").classList.add("hidden");await loadPrices();$("#price-panel").scrollIntoView({behavior:"smooth",block:"start"})}
 async function openST(p){currentProduct=p;$("#price-panel").classList.add("hidden");$("#policy-panel").classList.add("hidden");$("#st-title").textContent=p.brand+" "+p.model+" · ST返利";$("#st-panel").classList.remove("hidden");$("#st-form-panel").classList.add("hidden");await loadST();$("#st-panel").scrollIntoView({behavior:"smooth",block:"start"})}
 async function loadST(){if(!currentProduct)return;const rows=await api("/products/"+currentProduct.id+"/st-rebates"+(me.role==="admin"?"?include_voided=true":""));const body=$("#st-rebates");body.replaceChildren();$("#empty-st").classList.toggle("hidden",rows.length!==0);rows.forEach(r=>{const tr=document.createElement("tr");[r.effective_date,r.variant,"¥"+Number(r.amount).toFixed(2),r.note||"—","用户 #"+r.recorded_by,new Date(r.created_at).toLocaleString()].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});const td=document.createElement("td");td.textContent=r.voided_at?"已作废":"有效";if(me.role==="admin"&&!r.voided_at){const b=document.createElement("button");b.className="danger";b.textContent="作废";b.onclick=async()=>{const reason=prompt("请输入作废原因（至少5个字）");if(reason===null)return;if(reason.trim().length<5){alert("作废原因至少5个字");return}if(!confirm("确认作废ST返利 ¥"+Number(r.amount).toFixed(2)+"？原记录会保留。"))return;try{await api("/st-rebates/"+r.id+"/void?reason="+encodeURIComponent(reason.trim()),{method:"PATCH"});await loadST()}catch(e){alert(e.message)}};td.append(b)}tr.append(td);body.append(tr)})}
