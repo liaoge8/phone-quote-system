@@ -91,7 +91,7 @@ const api=async(path,opts={})=>{
 };
 function showMessage(msg,error=false){const el=$("#message");el.textContent=msg;el.classList.remove("hidden","error");if(error)el.classList.add("error")}
 function logout(callApi=true){token="";me=null;currentProduct=null;localStorage.removeItem("quote_token");$("#app").classList.add("hidden");$("#userline").classList.add("hidden");$("#login").classList.remove("hidden");$("#price-panel").classList.add("hidden");$("#policy-panel").classList.add("hidden");$("#st-panel").classList.add("hidden");$("#admin-panel").classList.add("hidden");$("#audit-panel").classList.add("hidden");if(callApi)$("#password").value=""}
-async function enter(){me=await api("/auth/me");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");$("#userline").classList.remove("hidden");$("#identity").textContent=me.username+" · "+(me.role==="admin"?"管理员":"成员");await loadProducts();if(me.role==="admin")await loadAdmin()}
+async function enter(){me=await api("/auth/me");$("#archived-products-btn").classList.toggle("hidden",me.role!=="admin");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");$("#userline").classList.remove("hidden");$("#identity").textContent=me.username+" · "+(me.role==="admin"?"管理员":"成员");await loadProducts();if(me.role==="admin")await loadAdmin()}
 async function loadAdmin(){if(me.role!=="admin")return;$("#admin-panel").classList.remove("hidden");$("#audit-panel").classList.remove("hidden");
  const users=await api("/auth/users"),body=$("#members");body.replaceChildren();
  users.forEach(u=>{const tr=document.createElement("tr");[u.username,u.role==="admin"?"管理员":"成员",u.is_active?"启用":"停用"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});
