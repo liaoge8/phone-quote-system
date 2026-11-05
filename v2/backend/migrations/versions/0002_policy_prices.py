@@ -26,9 +26,18 @@ def upgrade():
     )
     op.create_index("ix_policy_prices_product_id", "policy_prices", ["product_id"])
     op.create_index("ix_policy_prices_effective_month", "policy_prices", ["effective_month"])
+    op.create_index(
+        "uq_policy_prices_active_product_variant_month",
+        "policy_prices",
+        ["product_id", "variant", "effective_month"],
+        unique=True,
+        sqlite_where=sa.text("voided_at IS NULL"),
+        postgresql_where=sa.text("voided_at IS NULL"),
+    )
 
 
 def downgrade():
+    op.drop_index("uq_policy_prices_active_product_variant_month", table_name="policy_prices")
     op.drop_index("ix_policy_prices_effective_month", table_name="policy_prices")
     op.drop_index("ix_policy_prices_product_id", table_name="policy_prices")
     op.drop_table("policy_prices")
