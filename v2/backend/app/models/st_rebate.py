@@ -13,6 +13,7 @@ class STRebate(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="RESTRICT"), index=True, nullable=False)
     variant: Mapped[str] = mapped_column(String(100), nullable=False)
+    variant_id: Mapped[int | None] = mapped_column(ForeignKey('product_variants.id', ondelete='RESTRICT'))
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     effective_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
     note: Mapped[str | None] = mapped_column(Text)
