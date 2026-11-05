@@ -24,6 +24,27 @@ def list_products(db: Session = Depends(get_db), user: User = Depends(get_curren
     return list(db.scalars(stmt).all())
 
 
+@router.get("/archived")
+def list_archived_products(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    stmt = select(Product).where(
+        Product.archived_at.is_not(None),
+        Product.status == "discontinued",
+    ).order_by(Product.archived_at.desc(), Product.id.desc())
+    return [
+        {
+            "id": product.id,
+            "brand": product.brand,
+            "model": product.model,
+            "archive_reason": product.archive_reason,
+            "archived_at": product.archived_at,
+        }
+        for product in db.scalars(stmt).all()
+    ]
+
+
 @router.post("", response_model=ProductOut, status_code=201)
 def create_product(
     body: ProductCreate,
