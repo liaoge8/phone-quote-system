@@ -44,8 +44,8 @@ def list_products(db: Session = Depends(get_db), user: User = Depends(get_curren
     )
     return [
         {"id": p.id, "brand": p.brand, "model": p.model, "intro": p.intro,
-         "status": p.status, "variants_count": variants, "colors_count": colors,
-         "current_policy_from": policy_price}
+         "status": p.status, "tagline": p.tagline, "selling_points": p.selling_points or [],
+         "variants_count": variants, "colors_count": colors, "current_policy_from": policy_price}
         for p, variants, colors, policy_price in db.execute(stmt).all()
     ]
 
