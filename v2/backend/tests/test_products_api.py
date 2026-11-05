@@ -260,3 +260,38 @@ def test_product_marketing_fields_are_saved_and_returned(product_client):
     item = next(row for row in listed.json() if row["id"] == body["id"])
     assert item["tagline"] == "轻薄人像手机"
     assert item["selling_points"] == ["前置人像", "轻薄机身", "长续航"]
+
+
+
+def test_product_list_includes_lowest_current_policy_price(product_client):
+    client, _sessions = product_client
+    member_headers = _login(client, "product_member", "member-password-123")
+    admin_headers = _login(client, "product_admin", "admin-password-123")
+    created = client.post(
+        "/api/products",
+        headers=member_headers,
+        json={"brand": "华为", "model": "政策起价测试"},
+    )
+    product_id = created.json()["id"]
+    variant = client.post(
+        f"/api/products/{product_id}/variants",
+        headers=admin_headers,
+        json={"display_name": "12GB + 256GB", "ram": "12GB", "storage": "256GB"},
+    )
+    assert variant.status_code == 201, variant.text
+    today = date.today().isoformat()
+    for price in ("3999.00", "3799.00"):
+        response = client.post("/api/policies", headers=member_headers, json={
+            "product_id": product_id,
+            "variant": "12GB + 256GB",
+            "effective_date": today,
+            "policy_price": price,
+            "interpretation": "本月渠道执行政策价格说明",
+        })
+        assert response.status_code == 201, response.text
+    rows = client.get("/api/products", headers=member_headers)
+    assert rows.status_code == 200, rows.text
+    row = next(item for item in rows.json() if item["id"] == product_id)
+    assert float(row["current_policy_from"]) == 3799.00
+    assert row["tagline"] is None
+    assert row["selling_points"] == []
