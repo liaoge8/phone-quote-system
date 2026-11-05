@@ -55,7 +55,10 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 <div id="policy-form-panel" class="hidden"><form id="policy-form" class="field"><div class="grid">
 <div class="field"><label>版本 / 配置</label><input name="variant" maxlength="100" required placeholder="如 12GB+256GB"></div>
 <div class="field"><label>政策价（元）</label><input name="policy_price" type="number" min="0.01" step="0.01" required></div>\n<div class="field"><label>政策生效日期</label><input name="effective_date" type="date" required></div>
-</div><div class="field"><label>备注（选填）</label><textarea name="note" maxlength="2000"></textarea></div>
+</div>
+<div class="field"><label>政策解读（必填，说明政策内容、适用范围和关键变化）</label><textarea name="interpretation" minlength="5" maxlength="5000" required></textarea></div>
+<div class="field"><label>政策宣贯截图（可多选，JPG / PNG / WEBP，单张不超过 10MB）</label><input name="evidence" type="file" accept="image/jpeg,image/png,image/webp" multiple></div>
+<div class="field"><label>备注（选填）</label><textarea name="note" maxlength="2000"></textarea></div>
 <div class="actions"><button type="submit">保存政策价</button><button type="button" class="secondary" id="cancel-policy">取消</button></div></form></div>
 <div class="tablewrap"><table><thead><tr><th>生效日期</th><th>版本 / 配置</th><th>政策价</th><th>政策解读 / 备注</th><th>证据</th><th>录入人</th><th>录入时间</th><th>状态 / 操作</th></tr></thead><tbody id="policies"></tbody></table></div><div id="empty-policies" class="empty hidden">该月份暂无政策价。</div>
 </div>
