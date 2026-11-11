@@ -1,5 +1,8 @@
 from pathlib import Path
 
+from datetime import date
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from app.core.time import BUSINESS_TZ
@@ -17,6 +20,7 @@ from app.models.product_variant import ProductVariant
 from app.models.product_color import ProductColor
 from app.models.st_rebate import STRebate
 from app.models.policy_price import PolicyEvidence
+from app.models.st_rebate import STRebate
 from app.models.user import User
 from app.schemas.product import ProductArchiveIn, ProductCreate, ProductOut
 from app.schemas.product_variant import ProductVariantCreate, ProductVariantOut
@@ -47,11 +51,45 @@ def list_products(db: Session = Depends(get_db), user: User = Depends(get_curren
         .where(Product.archived_at.is_(None), Product.status == "on_sale")
         .order_by(Product.id.desc())
     )
+    rows = db.execute(stmt).all()
+    product_ids = [p.id for p, _v, _c, _pf in rows]
+    net_from_map = {}
+    if product_ids:
+        next_month = date(today.year + (today.month == 12), today.month % 12 + 1, 1)
+        base_map, st_map, pol_map = {}, {}, {}
+        for pid, variant, price in db.execute(
+            select(PriceRecord.product_id, PriceRecord.variant, PriceRecord.price)
+            .where(PriceRecord.product_id.in_(product_ids), PriceRecord.price_type == "基础价格",
+                   PriceRecord.effective_date <= today, PriceRecord.voided_at.is_(None))
+            .order_by(PriceRecord.effective_date.desc(), PriceRecord.id.desc())
+        ).all():
+            base_map.setdefault((pid, variant), price)
+        for pid, variant, amount in db.execute(
+            select(STRebate.product_id, STRebate.variant, STRebate.amount)
+            .where(STRebate.product_id.in_(product_ids), STRebate.effective_date >= month_start,
+                   STRebate.effective_date <= today, STRebate.voided_at.is_(None))
+            .order_by(STRebate.effective_date.desc(), STRebate.id.desc())
+        ).all():
+            st_map.setdefault((pid, variant), amount)
+        for pid, variant, policy_price in db.execute(
+            select(PolicyPrice.product_id, PolicyPrice.variant, PolicyPrice.policy_price)
+            .where(PolicyPrice.product_id.in_(product_ids), PolicyPrice.effective_month == month_start,
+                   PolicyPrice.effective_date <= today, PolicyPrice.voided_at.is_(None))
+            .order_by(PolicyPrice.effective_date.desc(), PolicyPrice.id.desc())
+        ).all():
+            pol_map.setdefault((pid, variant), policy_price)
+        nets = {}
+        for key, base in base_map.items():
+            st = st_map.get(key)
+            pol = pol_map.get(key)
+            nets.setdefault(key[0], []).append(base - (st if st is not None else Decimal("0")) - (pol if pol is not None else Decimal("0")))
+        net_from_map = {pid: min(values) for pid, values in nets.items()}
     return [
         {"id": p.id, "brand": p.brand, "model": p.model, "intro": p.intro,
          "status": p.status, "tagline": p.tagline, "selling_points": p.selling_points or [],
-         "variants_count": variants, "colors_count": colors, "current_policy_from": policy_price}
-        for p, variants, colors, policy_price in db.execute(stmt).all()
+         "variants_count": variants, "colors_count": colors, "current_policy_from": policy_price,
+         "net_from": net_from_map.get(p.id)}
+        for p, variants, colors, policy_price in rows
     ]
 
 

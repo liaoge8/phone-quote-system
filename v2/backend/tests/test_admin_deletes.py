@@ -167,3 +167,14 @@ def test_delete_missing_price_returns_404(delete_client):
     admin = _login(client, "del_admin", "admin-password-123")
     response = client.delete("/api/prices/99999", headers=admin)
     assert response.status_code == 404
+
+
+def test_product_list_shows_net_from(delete_client):
+    client, Session = delete_client
+    admin = _login(client, "del_admin", "admin-password-123")
+    _seed_product(client, admin)
+    rows = client.get("/api/products", headers=admin)
+    assert rows.status_code == 200, rows.text
+    row = rows.json()[0]
+    assert float(row["net_from"]) == 1173.00
+    assert float(row["current_policy_from"]) == 60.00

@@ -36,6 +36,5 @@ class ProductOut(BaseModel):
     status: str
     variants_count: int = 0
     colors_count: int = 0
-    tagline: str | None = None
-    selling_points: list[str] = Field(default_factory=list)
     current_policy_from: Decimal | None = None
+    net_from: Decimal | None = None
