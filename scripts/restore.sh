@@ -20,8 +20,9 @@ mkdir -p "$POLICY_EVIDENCE_DIR"
 if find "$POLICY_EVIDENCE_DIR" -mindepth 1 -print -quit | grep -q .; then echo "Evidence target is not empty: $POLICY_EVIDENCE_DIR" >&2; exit 1; fi
 if tar -tzf "$work/policy-evidence.tar.gz" | grep -Eq '(^/|(^|/)\.\.(/|$))'; then echo "Unsafe evidence archive path detected." >&2; exit 1; fi
 tar -C "$staging" -xzf "$work/policy-evidence.tar.gz"
-existing="$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','S')")"
+PG_URL="${DATABASE_URL/+psycopg/}"
+existing="$(psql "$PG_URL" -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','S')")"
 [[ "$existing" == "0" ]] || { echo "Target database is not empty (public objects: $existing)." >&2; exit 1; }
-pg_restore --exit-on-error --no-owner --no-acl --dbname="$DATABASE_URL" "$work/database.dump"
+pg_restore --exit-on-error --no-owner --no-acl --dbname="$PG_URL" "$work/database.dump"
 cp -a "$staging/." "$POLICY_EVIDENCE_DIR/"
 echo "Restore completed. Verify Alembic version, login, products, prices, policy evidence downloads and CSV exports before opening traffic."

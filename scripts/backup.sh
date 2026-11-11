@@ -9,7 +9,8 @@ mkdir -p "$BACKUP_DIR"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 work="$(mktemp -d "$BACKUP_DIR/.quote-backup.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
-pg_dump "$DATABASE_URL" --format=custom --no-owner --no-acl --file="$work/database.dump"
+PG_URL="${DATABASE_URL/+psycopg/}"
+pg_dump "$PG_URL" --format=custom --no-owner --no-acl --file="$work/database.dump"
 tar -C "$POLICY_EVIDENCE_DIR" -czf "$work/policy-evidence.tar.gz" .
 cat > "$work/manifest.txt" <<EOF
 format=phone-quote-backup-v1
