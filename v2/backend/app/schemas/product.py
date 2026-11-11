@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -10,6 +11,8 @@ class ProductCreate(BaseModel):
     intro: str | None = None
     tagline: str | None = Field(default=None, max_length=160)
     selling_points: list[str] = Field(default_factory=list, max_length=8)
+    official_price: Decimal | None = Field(default=None, gt=0)
+    official_url: str | None = Field(default=None, max_length=500)
 
     @field_validator("brand", "model")
     @classmethod
@@ -28,6 +31,8 @@ class ProductUpdate(BaseModel):
     intro: str | None = Field(default=None, max_length=1000)
     tagline: str | None = Field(default=None, max_length=160)
     selling_points: list[str] | None = Field(default=None, max_length=8)
+    official_price: Decimal | None = Field(default=None, gt=0)
+    official_url: str | None = Field(default=None, max_length=500)
 
     @field_validator("brand", "model")
     @classmethod
@@ -76,3 +81,6 @@ class ProductOut(BaseModel):
     colors_count: int = 0
     current_policy_from: Decimal | None = None
     net_from: Decimal | None = None
+    official_price: Decimal | None = None
+    official_url: str | None = None
+    official_price_updated_at: datetime | None = None

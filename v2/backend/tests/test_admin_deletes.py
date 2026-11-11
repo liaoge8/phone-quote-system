@@ -230,3 +230,27 @@ def test_admin_deletes_color(delete_client):
     assert response.status_code == 200, response.text
     remaining = client.get(f"/api/products/{product_id}/colors", headers=admin).json()
     assert all(c["id"] != color["id"] for c in remaining)
+
+
+
+def test_admin_sets_official_price(delete_client):
+    client, Session = delete_client
+    admin = _login(client, "del_admin", "admin-password-123")
+    product_id, _ = _seed_product(client, admin)
+    response = client.patch(f"/api/products/{product_id}", headers=admin, json={
+        "official_price": "5999.00", "official_url": "https://www.vmall.com/product/100860.html"})
+    assert response.status_code == 200, response.text
+    assert float(response.json()["official_price"]) == 5999.00
+    assert response.json()["official_price_updated_at"] is not None
+    cleared = client.patch(f"/api/products/{product_id}", headers=admin, json={"official_price": None})
+    assert cleared.status_code == 200, cleared.text
+    assert cleared.json()["official_price"] is None
+
+
+def test_create_product_with_official_price(delete_client):
+    client, Session = delete_client
+    member = _login(client, "del_member", "member-password-123")
+    created = client.post("/api/products", headers=member, json={
+        "brand": "华为", "model": "官网价机型", "official_price": "5999.00"})
+    assert created.status_code == 201, created.text
+    assert float(created.json()["official_price"]) == 5999.00

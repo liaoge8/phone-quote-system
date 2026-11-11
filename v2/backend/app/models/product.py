@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text, func
+from decimal import Decimal
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 class Product(Base):
@@ -14,6 +15,10 @@ class Product(Base):
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     archived_by: Mapped[int | None] = mapped_column(ForeignKey('users.id', ondelete='RESTRICT'))
     archive_reason: Mapped[str | None] = mapped_column(Text)
+
+    official_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    official_url: Mapped[str | None] = mapped_column(String(500))
+    official_price_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     price_records = relationship('PriceRecord', back_populates='product', passive_deletes=True)
     variants = relationship('ProductVariant', passive_deletes=True, order_by='ProductVariant.id')

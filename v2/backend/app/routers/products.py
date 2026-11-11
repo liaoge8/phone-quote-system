@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -381,22 +381,33 @@ def update_product(product_id: int, body: ProductUpdate, db: Session = Depends(g
     changes = body.model_dump(exclude_unset=True)
     if not changes:
         raise HTTPException(422, "没有需要更新的字段")
+    def _jsonable(value):
+        if isinstance(value, list):
+            return [_jsonable(v) for v in value]
+        if isinstance(value, Decimal):
+            return str(value)
+        if isinstance(value, datetime):
+            return value.isoformat()
+        return value
     old = {}
     for key, value in changes.items():
-        current = getattr(product, key)
-        old[key] = list(current) if isinstance(current, list) else current
+        old[key] = _jsonable(getattr(product, key))
     for key, value in changes.items():
         setattr(product, key, value)
+    if "official_price" in changes or "official_url" in changes:
+        product.official_price_updated_at = utc_now()
     db.add(AuditLog(
         actor_id=admin.id,
         action="product.updated",
         target_type="product",
         target_id=str(product.id),
-        detail={"old": old, "new": {k: (list(v) if isinstance(v, list) else v) for k, v in changes.items()}},
+        detail={"old": old, "new": {k: _jsonable(v) for k, v in changes.items()}},
     ))
     db.commit()
     return {"id": product.id, "brand": product.brand, "model": product.model, "intro": product.intro,
-            "status": product.status, "tagline": product.tagline, "selling_points": product.selling_points or []}
+            "status": product.status, "tagline": product.tagline, "selling_points": product.selling_points or [],
+            "official_price": product.official_price, "official_url": product.official_url,
+            "official_price_updated_at": product.official_price_updated_at}
 
 
 @router.delete("/{product_id}/variants/{variant_id}")
