@@ -321,7 +321,7 @@ async function openProductDetail(p){
   ]);
   detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants,colors};
   (()=>{const cbox=$("#detail-colors");cbox.replaceChildren();cbox.append(document.createTextNode("厂家颜色："));if(!colors.length){cbox.append(document.createTextNode("暂未登记"))}else{colors.forEach((c,i)=>{if(i)cbox.append(document.createTextNode("、"));const s=document.createElement("span");s.textContent=c.color_name;cbox.append(s);if(me&&me.role==="admin"&&currentProduct){const x=document.createElement("button");x.type="button";x.className="pill-x";x.textContent="×";x.title="删除该颜色";x.onclick=async()=>{if(!confirm("确认删除颜色 "+c.color_name+"？"))return;try{await api("/products/"+currentProduct.id+"/colors/"+c.id,{method:"DELETE"});await openProductDetail(currentProduct);await loadProducts();showMessage("颜色已删除")}catch(e){showMessage(e.message,true)}};cbox.append(x)}})}})();
-  const variants=[...new Set([...registeredVariants.map(x=>x.display_name),...prices.map(x=>x.variant),...rebates.map(x=>x.variant),...detailCache.policies.map(x=>x.variant)])];
+  const variants=[...new Set(registeredVariants.map(x=>x.display_name))];
   variants.sort((a,b)=>a.localeCompare(b,"zh-CN", {numeric:true}));
   if(!variants.length)variants.push("尚未录入配置");const isAdminDetail=me?.role==="admin";$("#detail-add-variant").classList.toggle("hidden",!isAdminDetail);$("#detail-archive").classList.toggle("hidden",!isAdminDetail);$("#detail-delete").classList.toggle("hidden",!isAdminDetail);
   renderVariantPills(variants);
