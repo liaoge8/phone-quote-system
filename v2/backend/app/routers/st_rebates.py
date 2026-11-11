@@ -67,3 +67,20 @@ def void_st_rebate(record_id: int, reason: str, db: Session = Depends(get_db), a
     db.add(AuditLog(actor_id=admin.id, action="st_rebate.voided", target_type="st_rebate", target_id=str(record.id), detail={"reason": reason.strip(), "original_amount": str(record.amount)}))
     db.commit()
     return {"id": record.id, "voided": True}
+
+
+@router.delete("/st-rebates/{record_id}")
+def delete_st_rebate(record_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    record = db.get(STRebate, record_id)
+    if not record:
+        raise HTTPException(404, "ST返利记录不存在")
+    db.add(AuditLog(actor_id=admin.id, action="st_rebate.deleted", target_type="st_rebate", target_id=str(record.id), detail={
+        "product_id": record.product_id,
+        "variant_id": record.variant_id,
+        "amount": str(record.amount),
+        "effective_date": record.effective_date.isoformat(),
+        "voided": record.voided_at is not None,
+    }))
+    db.delete(record)
+    db.commit()
+    return {"id": record_id, "deleted": True}

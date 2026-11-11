@@ -88,14 +88,14 @@ def test_client_cannot_supply_recorded_by(client):
     assert response.status_code == 422
 
 
-def test_price_value_has_no_update_or_delete_endpoint(client):
+def test_price_value_cannot_be_updated_and_member_cannot_delete(client):
     client, product_id, _admin_id, _member_id, _TestingSession = client
     headers = login(client, "price_member", "member-password-123")
     created = create_price(client, headers, product_id)
     record_id = created.json()["id"]
-    assert client.put(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 404
-    assert client.patch(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 404
-    assert client.delete(f"/api/prices/{record_id}", headers=headers).status_code == 404
+    assert client.put(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 405
+    assert client.patch(f"/api/prices/{record_id}", headers=headers, json={"price": "1.00"}).status_code == 405
+    assert client.delete(f"/api/prices/{record_id}", headers=headers).status_code == 403
 
 
 def test_member_cannot_include_voided_records_and_attempt_is_audited(client):

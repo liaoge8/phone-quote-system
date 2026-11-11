@@ -225,3 +225,29 @@ def void_policy_price(
     }))
     db.commit()
     return {"id": record.id, "voided": True}
+
+
+@router.delete("/{record_id}")
+def delete_policy_price(record_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    record = db.get(PolicyPrice, record_id)
+    if not record:
+        raise HTTPException(404, "政策返利记录不存在")
+    evidences = list(db.scalars(select(PolicyEvidence).where(
+        PolicyEvidence.policy_price_id == record.id
+    )).all())
+    storage_dir = Path(settings.policy_evidence_dir)
+    for evidence in evidences:
+        (storage_dir / evidence.storage_key).unlink(missing_ok=True)
+    db.add(AuditLog(actor_id=admin.id, action="policy_price.deleted", target_type="policy_price", target_id=str(record.id), detail={
+        "product_id": record.product_id,
+        "variant": record.variant,
+        "policy_price": str(record.policy_price),
+        "effective_month": record.effective_month.isoformat(),
+        "evidence_files": len(evidences),
+        "voided": record.voided_at is not None,
+    }))
+    for evidence in evidences:
+        db.delete(evidence)
+    db.delete(record)
+    db.commit()
+    return {"id": record_id, "deleted": True, "evidence_files_removed": len(evidences)}

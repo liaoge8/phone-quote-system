@@ -82,3 +82,20 @@ def void_price(record_id: int, reason: str, db: Session = Depends(get_db), admin
     db.add(AuditLog(actor_id=admin.id, action='price.voided', target_type='price_record', target_id=str(record.id), detail={'reason': reason.strip(), 'original_price': str(record.price)}))
     db.commit()
     return {'id': record.id, 'voided': True}
+
+
+@router.delete('/prices/{record_id}')
+def delete_price(record_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    record = db.get(PriceRecord, record_id)
+    if not record:
+        raise HTTPException(404, '价格记录不存在')
+    db.add(AuditLog(actor_id=admin.id, action='price.deleted', target_type='price_record', target_id=str(record.id), detail={
+        'product_id': record.product_id,
+        'variant_id': record.variant_id,
+        'price': str(record.price),
+        'effective_date': record.effective_date.isoformat(),
+        'voided': record.voided_at is not None,
+    }))
+    db.delete(record)
+    db.commit()
+    return {'id': record_id, 'deleted': True}

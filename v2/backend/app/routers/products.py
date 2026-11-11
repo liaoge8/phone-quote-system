@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from app.core.time import BUSINESS_TZ
 from app.models.policy_price import PolicyPrice
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.deps import get_current_user, require_admin
 from app.core.time import utc_now
 from app.db.session import get_db
@@ -12,6 +15,8 @@ from app.models.price_record import PriceRecord
 from app.models.product import Product
 from app.models.product_variant import ProductVariant
 from app.models.product_color import ProductColor
+from app.models.st_rebate import STRebate
+from app.models.policy_price import PolicyEvidence
 from app.models.user import User
 from app.schemas.product import ProductArchiveIn, ProductCreate, ProductOut
 from app.schemas.product_variant import ProductVariantCreate, ProductVariantOut
@@ -252,3 +257,66 @@ def create_product_color(
     db.commit()
     db.refresh(color)
     return color
+
+
+@router.delete("/{product_id}")
+def delete_product(product_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    product = db.get(Product, product_id)
+    if not product:
+        raise HTTPException(404, "商品不存在")
+
+    prices = list(db.scalars(select(PriceRecord).where(PriceRecord.product_id == product_id)).all())
+    rebates = list(db.scalars(select(STRebate).where(STRebate.product_id == product_id)).all())
+    policies = list(db.scalars(select(PolicyPrice).where(PolicyPrice.product_id == product_id)).all())
+    policy_ids = [p.id for p in policies]
+    evidences = list(db.scalars(select(PolicyEvidence).where(
+        PolicyEvidence.policy_price_id.in_(policy_ids)
+    )).all()) if policy_ids else []
+
+    storage_dir = Path(settings.policy_evidence_dir)
+    for evidence in evidences:
+        (storage_dir / evidence.storage_key).unlink(missing_ok=True)
+
+    colors = list(db.scalars(select(ProductColor).where(ProductColor.product_id == product_id)).all())
+    variants = list(db.scalars(select(ProductVariant).where(ProductVariant.product_id == product_id)).all())
+
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="product.deleted",
+        target_type="product",
+        target_id=str(product_id),
+        detail={
+            "brand": product.brand,
+            "model": product.model,
+            "price_records": len(prices),
+            "st_rebates": len(rebates),
+            "policy_prices": len(policies),
+            "evidence_files": len(evidences),
+            "variants": len(variants),
+            "colors": len(colors),
+        },
+    ))
+    for evidence in evidences:
+        db.delete(evidence)
+    for policy in policies:
+        db.delete(policy)
+    for record in prices:
+        db.delete(record)
+    for record in rebates:
+        db.delete(record)
+    for color in colors:
+        db.delete(color)
+    for variant in variants:
+        db.delete(variant)
+    db.delete(product)
+    db.commit()
+    return {
+        "id": product_id,
+        "deleted": True,
+        "removed": {
+            "price_records": len(prices),
+            "st_rebates": len(rebates),
+            "policy_prices": len(policies),
+            "evidence_files": len(evidences),
+        },
+    }
