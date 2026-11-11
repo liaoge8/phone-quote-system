@@ -178,3 +178,55 @@ def test_product_list_shows_net_from(delete_client):
     row = rows.json()[0]
     assert float(row["net_from"]) == 1173.00
     assert float(row["current_policy_from"]) == 60.00
+
+
+
+def test_admin_updates_product_info(delete_client):
+    client, Session = delete_client
+    admin = _login(client, "del_admin", "admin-password-123")
+    product_id, _ = _seed_product(client, admin)
+    response = client.patch(f"/api/products/{product_id}", headers=admin, json={
+        "brand": "华为", "model": "测试机型 Pro", "tagline": "轻薄长续航",
+        "intro": "官方直供", "selling_points": ["大电池", "快充"]})
+    assert response.status_code == 200, response.text
+    assert response.json()["model"] == "测试机型 Pro"
+    assert response.json()["selling_points"] == ["大电池", "快充"]
+    with Session() as db:
+        assert "product.updated" in list(db.scalars(select(AuditLog.action)).all())
+
+
+def test_member_cannot_edit_product(delete_client):
+    client, Session = delete_client
+    admin = _login(client, "del_admin", "admin-password-123")
+    member = _login(client, "del_member", "member-password-123")
+    product_id, _ = _seed_product(client, admin)
+    response = client.patch(f"/api/products/{product_id}", headers=member, json={"model": "改"})
+    assert response.status_code == 403, response.text
+
+
+def test_admin_deactivates_variant(delete_client):
+    client, Session = delete_client
+    admin = _login(client, "del_admin", "admin-password-123")
+    product_id, _ = _seed_product(client, admin)
+    variant = client.get(f"/api/products/{product_id}/variants", headers=admin).json()[0]
+    response = client.delete(f"/api/products/{product_id}/variants/{variant['id']}", headers=admin)
+    assert response.status_code == 200, response.text
+    remaining = client.get(f"/api/products/{product_id}/variants", headers=admin).json()
+    assert all(v["id"] != variant["id"] for v in remaining)
+    again = client.delete(f"/api/products/{product_id}/variants/{variant['id']}", headers=admin)
+    assert again.status_code == 404
+    recreate = client.post(f"/api/products/{product_id}/variants", headers=admin,
+                           json={"display_name": variant["display_name"]})
+    assert recreate.status_code == 201, recreate.text
+    assert recreate.json()["is_active"] is True
+
+
+def test_admin_deletes_color(delete_client):
+    client, Session = delete_client
+    admin = _login(client, "del_admin", "admin-password-123")
+    product_id, _ = _seed_product(client, admin)
+    color = client.post(f"/api/products/{product_id}/colors", headers=admin, json={"color_name": "星空黑"}).json()
+    response = client.delete(f"/api/products/{product_id}/colors/{color['id']}", headers=admin)
+    assert response.status_code == 200, response.text
+    remaining = client.get(f"/api/products/{product_id}/colors", headers=admin).json()
+    assert all(c["id"] != color["id"] for c in remaining)

@@ -20,6 +20,44 @@ class ProductCreate(BaseModel):
         return value
 
 
+class ProductUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    brand: str | None = Field(default=None, min_length=1, max_length=40)
+    model: str | None = Field(default=None, min_length=1, max_length=100)
+    intro: str | None = Field(default=None, max_length=1000)
+    tagline: str | None = Field(default=None, max_length=160)
+    selling_points: list[str] | None = Field(default=None, max_length=8)
+
+    @field_validator("brand", "model")
+    @classmethod
+    def strip_required_text(cls, value):
+        if value is None:
+            return value
+        value = value.strip()
+        if not value:
+            raise ValueError("不能为空或仅包含空格")
+        return value
+
+    @field_validator("tagline", "intro")
+    @classmethod
+    def strip_optional_text(cls, value):
+        if value is None:
+            return value
+        value = value.strip()
+        return value or None
+
+    @field_validator("selling_points")
+    @classmethod
+    def clean_selling_points(cls, value):
+        if value is None:
+            return value
+        cleaned = [p.strip() for p in value if p and p.strip()]
+        if not cleaned:
+            raise ValueError("核心卖点不能是空列表，请传 null 或至少一条")
+        return cleaned
+
+
 class ProductArchiveIn(BaseModel):
     reason: str = Field(min_length=5, max_length=500)
 

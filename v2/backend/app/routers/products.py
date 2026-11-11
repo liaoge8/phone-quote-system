@@ -22,7 +22,7 @@ from app.models.st_rebate import STRebate
 from app.models.policy_price import PolicyEvidence
 from app.models.st_rebate import STRebate
 from app.models.user import User
-from app.schemas.product import ProductArchiveIn, ProductCreate, ProductOut
+from app.schemas.product import ProductArchiveIn, ProductCreate, ProductOut, ProductUpdate
 from app.schemas.product_variant import ProductVariantCreate, ProductVariantOut
 from app.schemas.product_color import ProductColorCreate, ProductColorOut
 
@@ -236,18 +236,31 @@ def create_product_variant(
         ProductVariant.product_id == product_id,
         ProductVariant.display_name == body.display_name,
     ))
-    if existing:
+    if existing and existing.is_active:
         raise HTTPException(409, "该商品配置已存在")
-    variant = ProductVariant(product_id=product_id, **body.model_dump())
-    db.add(variant)
-    db.flush()
-    db.add(AuditLog(
-        actor_id=admin.id,
-        action="product_variant.created",
-        target_type="product_variant",
-        target_id=str(variant.id),
-        detail={"product_id": product_id, "display_name": variant.display_name},
-    ))
+    if existing:
+        existing.is_active = True
+        existing.ram = body.ram
+        existing.storage = body.storage
+        variant = existing
+        db.add(AuditLog(
+            actor_id=admin.id,
+            action="product_variant.restored",
+            target_type="product_variant",
+            target_id=str(variant.id),
+            detail={"product_id": product_id, "display_name": variant.display_name},
+        ))
+    else:
+        variant = ProductVariant(product_id=product_id, **body.model_dump())
+        db.add(variant)
+        db.flush()
+        db.add(AuditLog(
+            actor_id=admin.id,
+            action="product_variant.created",
+            target_type="product_variant",
+            target_id=str(variant.id),
+            detail={"product_id": product_id, "display_name": variant.display_name},
+        ))
     db.commit()
     db.refresh(variant)
     return variant
@@ -358,3 +371,69 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin: User =
             "evidence_files": len(evidences),
         },
     }
+
+
+@router.patch("/{product_id}")
+def update_product(product_id: int, body: ProductUpdate, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    product = db.get(Product, product_id)
+    if not product:
+        raise HTTPException(404, "商品不存在")
+    changes = body.model_dump(exclude_unset=True)
+    if not changes:
+        raise HTTPException(422, "没有需要更新的字段")
+    old = {}
+    for key, value in changes.items():
+        current = getattr(product, key)
+        old[key] = list(current) if isinstance(current, list) else current
+    for key, value in changes.items():
+        setattr(product, key, value)
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="product.updated",
+        target_type="product",
+        target_id=str(product.id),
+        detail={"old": old, "new": {k: (list(v) if isinstance(v, list) else v) for k, v in changes.items()}},
+    ))
+    db.commit()
+    return {"id": product.id, "brand": product.brand, "model": product.model, "intro": product.intro,
+            "status": product.status, "tagline": product.tagline, "selling_points": product.selling_points or []}
+
+
+@router.delete("/{product_id}/variants/{variant_id}")
+def delete_product_variant(product_id: int, variant_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    if not db.get(Product, product_id):
+        raise HTTPException(404, "商品不存在")
+    variant = db.get(ProductVariant, variant_id)
+    if not variant or variant.product_id != product_id:
+        raise HTTPException(404, "配置不存在")
+    if not variant.is_active:
+        raise HTTPException(404, "配置已删除")
+    variant.is_active = False
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="product_variant.deleted",
+        target_type="product_variant",
+        target_id=str(variant.id),
+        detail={"product_id": product_id, "display_name": variant.display_name},
+    ))
+    db.commit()
+    return {"id": variant_id, "deleted": True, "display_name": variant.display_name}
+
+
+@router.delete("/{product_id}/colors/{color_id}")
+def delete_product_color(product_id: int, color_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    if not db.get(Product, product_id):
+        raise HTTPException(404, "商品不存在")
+    color = db.get(ProductColor, color_id)
+    if not color or color.product_id != product_id:
+        raise HTTPException(404, "颜色不存在")
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="product_color.deleted",
+        target_type="product_color",
+        target_id=str(color.id),
+        detail={"product_id": product_id, "color_name": color.color_name},
+    ))
+    db.delete(color)
+    db.commit()
+    return {"id": color_id, "deleted": True, "color_name": color.color_name}
