@@ -23,6 +23,8 @@ router = APIRouter()
 @router.get("/price-overview")
 def price_overview(as_of: date | None = None, export: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     cutoff = as_of or date.today()
+    month_start = cutoff.replace(day=1)
+    next_month = date(cutoff.year + (cutoff.month == 12), cutoff.month % 12 + 1, 1)
     products = list(db.scalars(
         select(Product).where(Product.archived_at.is_(None), Product.status == "on_sale").order_by(Product.brand, Product.model)
     ).all())
@@ -39,6 +41,7 @@ def price_overview(as_of: date | None = None, export: bool = False, db: Session 
     rebates = db.scalars(
         select(STRebate).where(
             STRebate.product_id.in_(product_ids),
+            STRebate.effective_date >= month_start,
             STRebate.effective_date <= cutoff,
             STRebate.voided_at.is_(None),
         ).order_by(STRebate.effective_date.desc(), STRebate.id.desc())
@@ -46,6 +49,7 @@ def price_overview(as_of: date | None = None, export: bool = False, db: Session 
     policies = db.scalars(
         select(PolicyPrice).where(
             PolicyPrice.product_id.in_(product_ids),
+            PolicyPrice.effective_month == month_start,
             PolicyPrice.effective_date <= cutoff,
             PolicyPrice.voided_at.is_(None),
         ).order_by(PolicyPrice.effective_date.desc(), PolicyPrice.id.desc())
