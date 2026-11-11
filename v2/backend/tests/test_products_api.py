@@ -263,7 +263,7 @@ def test_product_marketing_fields_are_saved_and_returned(product_client):
 
 
 
-def test_product_list_includes_lowest_current_policy_price(product_client):
+def test_product_list_includes_highest_current_policy_rebate(product_client):
     client, _sessions = product_client
     member_headers = _login(client, "product_member", "member-password-123")
     admin_headers = _login(client, "product_admin", "admin-password-123")
@@ -292,6 +292,6 @@ def test_product_list_includes_lowest_current_policy_price(product_client):
     rows = client.get("/api/products", headers=member_headers)
     assert rows.status_code == 200, rows.text
     row = next(item for item in rows.json() if item["id"] == product_id)
-    assert float(row["current_policy_from"]) == 3799.00
+    assert float(row["current_policy_from"]) == 3999.00
     assert row["tagline"] is None
     assert row["selling_points"] == []

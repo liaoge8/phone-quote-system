@@ -31,7 +31,7 @@ def list_products(db: Session = Depends(get_db), user: User = Depends(get_curren
     ).scalar_subquery()
     today = utc_now().astimezone(BUSINESS_TZ).date()
     month_start = today.replace(day=1)
-    policy_from = select(func.min(PolicyPrice.policy_price)).where(
+    policy_from = select(func.max(PolicyPrice.policy_price)).where(
         PolicyPrice.product_id == Product.id,
         PolicyPrice.effective_month == month_start,
         PolicyPrice.effective_date <= today,

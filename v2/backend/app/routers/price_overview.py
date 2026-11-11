@@ -74,6 +74,7 @@ def price_overview(as_of: date | None = None, export: bool = False, db: Session 
             "st_rebate": rebate.amount if rebate else None,
             "st_rebate_effective_date": rebate.effective_date if rebate else None,
             "policy_price": policy.policy_price if policy else None,
+            "net_price": (base.price - policy.policy_price) if (base and policy) else None,
             "policy_interpretation": policy.interpretation if policy else None,
             "policy_effective_date": policy.effective_date if policy else None,
         })
@@ -81,7 +82,7 @@ def price_overview(as_of: date | None = None, export: bool = False, db: Session 
     if export:
         output = StringIO()
         writer = csv.writer(output)
-        writer.writerow(["品牌", "机型", "配置", "基础价格", "基础价格生效日期", "ST返利", "ST返利生效日期", "政策价", "政策解释", "政策价生效日期"])
+        writer.writerow(["品牌", "机型", "配置", "基础价格", "基础价格生效日期", "ST返利", "ST返利生效日期", "政策返利", "政策后价", "政策解释", "政策返利生效日期"])
         for item in items:
             writer.writerow([
                 item["brand"], item["model"], item["variant"],
@@ -90,6 +91,7 @@ def price_overview(as_of: date | None = None, export: bool = False, db: Session 
                 str(item["st_rebate"]) if item["st_rebate"] is not None else "",
                 item["st_rebate_effective_date"] or "",
                 str(item["policy_price"]) if item["policy_price"] is not None else "",
+                str(item["net_price"]) if item["net_price"] is not None else "",
                 item["policy_interpretation"] or "",
                 item["policy_effective_date"] or "",
             ])
