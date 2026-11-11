@@ -29,7 +29,7 @@ services:
       ENVIRONMENT: production
     volumes:
       - policy_evidence:/app/data/policy-evidence
-      - backup_archives:/app/data/backups
+      - ./backups:/app/data/backups
     depends_on:
       db:
         condition: service_healthy
@@ -76,7 +76,7 @@ services:
     volumes:
       - ./scripts:/scripts:ro
       - policy_evidence:/evidence
-      - backup_archives:/backups:ro
+      - ./backups:/backups:ro
     depends_on:
       db:
         condition: service_healthy
@@ -85,7 +85,7 @@ services:
 volumes:
   postgres_data:
   policy_evidence:
-  backup_archives:
+
 
 networks:
   internal:

@@ -19,7 +19,36 @@ mkdir -p backups
 docker compose run --rm backup
 ```
 
-该命令会把备份写到主机项目目录的 backups 文件夹。后台生成的备份则存放在 Docker 的 backup_archives 持久化卷，可通过后台下载。
+该命令会把备份写到主机项目目录的 backups 文件夹。后台生成的备份同样保存在该目录（`./backups` 统一挂载），可直接通过后台下载或服务器文件传输带走。
+
+## 每日自动备份
+
+在部署机上执行一次（幂等，可重复执行）：
+
+```bash
+bash scripts/install-cron.sh
+```
+
+会在每天 03:00 自动生成备份包写入 `backups/`，并自动清理 14 天前的备份，日志在 `backups/cron.log`。
+
+## 一键迁移到新服务器
+
+前提：新服务器已安装 Docker 与 Docker Compose。
+
+1. 旧服务器生成备份包并输出传输清单：
+
+```bash
+bash scripts/migrate-out.sh
+```
+
+2. 按清单把备份包、`.sha256` 校验文件和 `.env`（可选 `deploy/certs/`）传到新服务器。
+3. 新服务器把项目部署文件放好（git clone 或复制仓库），把 `.env` 放到项目根目录，然后执行：
+
+```bash
+bash scripts/migrate-in.sh /path/to/phone-quote-<时间戳>.tar.gz
+```
+
+脚本会自动完成：启动空数据库 → SHA-256 校验并恢复数据库与政策截图 → 构建启动全部服务 → 健康检查。之后按下方验收清单抽查再开放访问。
 
 ## 新服务器恢复
 

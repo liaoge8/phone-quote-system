@@ -75,6 +75,11 @@ jobs:
         run: alembic upgrade head
       - name: Validate backup script syntax
         run: bash -n ../../scripts/backup.sh
+      - name: Validate migration and cron scripts syntax
+        run: |
+          bash -n ../../scripts/migrate-out.sh
+          bash -n ../../scripts/migrate-in.sh
+          bash -n ../../scripts/install-cron.sh
 
   docker-build:
     runs-on: ubuntu-latest
