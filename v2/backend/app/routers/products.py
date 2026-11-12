@@ -91,7 +91,9 @@ def list_products(db: Session = Depends(get_db), user: User = Depends(get_curren
         {"id": p.id, "brand": p.brand, "model": p.model, "intro": p.intro,
          "status": p.status, "tagline": p.tagline, "selling_points": p.selling_points or [],
          "variants_count": variants, "colors_count": colors, "current_policy_from": policy_price,
-         "net_from": net_from_map.get(p.id)}
+         "net_from": net_from_map.get(p.id),
+         "official_price": p.official_price, "official_url": p.official_url,
+         "official_price_updated_at": p.official_price_updated_at}
         for p, variants, colors, policy_price in rows
     ]
 
