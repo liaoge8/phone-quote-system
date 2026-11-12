@@ -486,6 +486,8 @@ def _parse_vmall_html(html: str) -> dict:
     name = main.get("name") or main.get("briefName")
     if not name:
         raise HTTPException(502, "商品数据里没有商品名称")
+    brand = main.get("brandName") or ""
+    model = name[len(brand):].strip() if brand and name.startswith(brand) else name
     current_code = main.get("currentSbomCode")
     sbom_list = main.get("productOptions", {}).get("sbomList") or {}
     color_by_code, colors = {}, []
@@ -496,21 +498,40 @@ def _parse_vmall_html(html: str) -> dict:
         if item.get("sbomCode") and value:
             color_by_code[item["sbomCode"]] = value
     variants = []
+    tagline = ""
+    selling_points = []
+    first_major = None
     for code, entry in sbom_list.items():
+        if first_major is None and entry.get("majorAttrList"):
+            first_major = entry.get("majorAttrList")
+        version, color = "", ""
+        for attr in entry.get("gbomAttrList") or []:
+            if attr.get("attrName") == "版本":
+                version = attr.get("attrValue") or ""
+            elif attr.get("attrName") == "颜色":
+                color = attr.get("attrValue") or ""
+        if not color:
+            color = color_by_code.get(code, "")
+        prom = entry.get("sbomPromWord") or ""
+        if prom and (not tagline or len(prom) > len(tagline)):
+            tagline = prom
+        display = (version + " " + color).strip() or entry.get("name") or code
         price = entry.get("price")
-        if price is None:
-            continue
-        sbom_name = entry.get("name") or ""
-        version_match = re.search(r"(\d+GB|\d+TB)", sbom_name)
-        version = version_match.group(1) if version_match else ""
-        color = color_by_code.get(code, "")
-        display = (version + " " + color).strip() or sbom_name
-        variants.append({
-            "sbom_code": code,
-            "display_name": display,
-            "price": float(price),
-            "current": code == current_code,
-        })
+        if price is not None:
+            variants.append({
+                "sbom_code": code,
+                "display_name": display,
+                "version": version,
+                "color": color,
+                "price": float(price),
+                "current": code == current_code,
+            })
+    for attr in first_major or []:
+        attr_name = str(attr.get("attrName") or "").strip()
+        attr_value = str(attr.get("attrValue") or "").strip()
+        point = (attr_name + "：" + attr_value) if attr_name and attr_value else attr_value
+        if point and point not in selling_points:
+            selling_points.append(point)
     official_price = None
     if current_code and current_code in sbom_list:
         official_price = sbom_list[current_code].get("price")
@@ -518,10 +539,16 @@ def _parse_vmall_html(html: str) -> dict:
     desc_match = re.search(r'<meta name="description" content="([^"]+)"', html)
     if desc_match:
         description = desc_match.group(1)[:500]
+    intro = ("；".join(selling_points[:6]) + "。") if selling_points else description
     return {
         "name": name,
-        "brand": main.get("brandName"),
+        "brand": brand,
+        "model": model,
+        "tagline": tagline,
+        "intro": intro,
+        "selling_points": selling_points[:8],
         "official_price": float(official_price) if official_price is not None else None,
+        "official_url": None,
         "variants": variants,
         "colors": colors,
         "description": description,

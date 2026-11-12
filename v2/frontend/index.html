@@ -133,7 +133,7 @@ main{padding:0 8px}
 <h2>新增商品</h2><form id="product-form" class="field">
 <div class="grid"><div class="field"><label>品牌</label><input name="brand" maxlength="40" required placeholder="例如：华为"></div><div class="field"><label>型号</label><input name="model" maxlength="100" required placeholder="例如：Mate 系列"></div></div>
 <div class="field"><label>一句话介绍（选填）</label><input name="tagline" maxlength="160" placeholder="简短描述商品定位或亮点"></div><div class="field"><label>商品简介（选填）</label><textarea name="intro" maxlength="2000"></textarea></div><div class="field"><label>核心卖点（每行一条，最多8条）</label><textarea name="selling_points" placeholder="例如：大容量电池&#10;高刷新率屏幕"></textarea><div class="grid"><div class="field"><label>官网参考价（选填）</label><input name="official_price" type="number" min="0.01" step="0.01"></div><div class="field"><label>官网链接（选填）</label><input name="official_url" placeholder="https://www.vmall.com/product/..."></div></div><div class="field"><button id="vmall-search-btn" class="secondary" type="button">在华为商城搜索该型号</button></div>
-<div class="field" style="display:flex;gap:6px"><input id="vmall-fetch-form-url" placeholder="粘贴华为商城商品链接，一键采集资料/配置/颜色/官网价" style="flex:1"><button id="vmall-fetch-form-btn" class="secondary" type="button">采集并填写</button></div></div>
+<div class="field" style="display:flex;gap:6px"><input id="vmall-fetch-form-url" placeholder="粘贴华为商城商品链接，一键采集资料/配置/颜色/官网价" style="flex:1"><button id="vmall-fetch-form-btn" class="secondary" type="button">采集并填写</button></div><div id="vmall-matrix-box" class="hidden"><div class="muted" style="margin-top:10px">采集到的配置（勾选要添加的；基础价=渠道进价，选填）</div><div id="vmall-matrix"></div><div class="muted" style="margin-top:8px">采集到的颜色（× 可删）</div><div id="vmall-colors"></div></div></div>
 <div class="actions"><button type="submit">保存商品</button><button type="button" class="secondary" id="cancel-product">取消</button></div>
 </form></div>
 <div id="archived-panel" class="panel hidden"><div class="toolbar"><h2>已停用商品</h2><button class="secondary" id="close-archived-btn">关闭</button></div><div class="tablewrap"><table><thead><tr><th>品牌</th><th>型号</th><th>停用原因</th><th>停用时间</th><th>操作</th></tr></thead><tbody id="archived-products"></tbody></table></div><div id="empty-archived" class="empty hidden">暂无已停用商品。</div></div>
@@ -415,21 +415,46 @@ $("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admi
  try{const resp=await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:v?Number(v):null,official_url:$("#official-url-input").value.trim()||null})});
  currentProduct=Object.assign({},currentProduct,resp);await openProductDetail(currentProduct);await loadProducts();showMessage("官网参考价已保存")}catch(e){showMessage(e.message,true)}};
 $("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
+function renderVmallMatrix(){
+ const box=$("#vmall-matrix-box"),grid=$("#vmall-matrix"),cwrap=$("#vmall-colors");
+ if(!box||!grid||!cwrap)return;
+ if(!pendingVmall){box.classList.add("hidden");return}
+ box.classList.remove("hidden");grid.replaceChildren();cwrap.replaceChildren();
+ (pendingVmall.variants||[]).forEach(v=>{
+  const row=document.createElement("div");row.style.cssText="display:flex;gap:6px;align-items:center;margin-top:6px";
+  const cb=document.createElement("input");cb.type="checkbox";cb.checked=v.include!==false;cb.onchange=()=>{v.include=cb.checked};
+  const nm=document.createElement("span");nm.style.cssText="flex:1.2;font-size:13px";nm.textContent=v.display_name;
+  const op=document.createElement("span");op.style.cssText="flex:.9;font-size:12px;color:#6b7280";op.textContent="官网 ¥"+Number(v.price).toFixed(2);
+  const bp=document.createElement("input");bp.type="number";bp.min="0.01";bp.step="0.01";bp.placeholder="基础价";bp.style.cssText="flex:1";bp.value=v.base_price||"";bp.oninput=()=>{v.base_price=bp.value};
+  row.append(cb,nm,op,bp);grid.append(row)});
+ (pendingVmall.colors||[]).forEach((c,i)=>{
+  const chip=document.createElement("span");chip.style.cssText="display:inline-flex;align-items:center;gap:4px;background:#eef2f7;border-radius:6px;padding:3px 8px;margin:3px 6px 3px 0;font-size:12px";
+  chip.append(document.createTextNode(c));
+  const x=document.createElement("button");x.type="button";x.textContent="×";x.style.cssText="border:none;background:none;color:#dc2626;cursor:pointer;padding:0";
+  x.onclick=()=>{pendingVmall.colors.splice(i,1);renderVmallMatrix()};
+  chip.append(x);cwrap.append(chip)});
+}
 let pendingVmall=null;
-$("#vmall-fetch-form-btn").onclick=async()=>{const u=$("#vmall-fetch-form-url").value.trim()||$("#product-form").querySelector('[name="official_url"]').value.trim();if(!u){showMessage("请先粘贴华为商城商品链接",true);return}
- try{const d=await api("/products/fetch-vmall",{method:"POST",body:JSON.stringify({url:u})});
- const f=$("#product-form");
- f.tagline.value=d.name||"";f.intro.value=d.description||"";
- if(d.official_price!=null)f.official_price.value=d.official_price;
- if(d.official_url)f.official_url.value=d.official_url;
- pendingVmall={variants:d.variants||[],colors:d.colors||[]};
- showMessage("已采集："+(d.name||"")+"，官网价 ¥"+(d.official_price??"—")+"，"+pendingVmall.variants.length+" 个配置、"+pendingVmall.colors.length+" 个颜色；保存商品后自动添加")}
- catch(e){showMessage(e.message,true)}};
+$("#vmall-fetch-form-btn").onclick=async()=>{const u=$("#vmall-fetch-form-url").value.trim()||$("#product-form").querySelector('[name="official_url"]').value.trim();
+if(!u){showMessage("请先粘贴华为商城商品链接",true);return}
+try{const d=await api("/products/fetch-vmall",{method:"POST",body:JSON.stringify({url:u})});
+const f=$("#product-form");
+if(d.brand)f.brand.value=d.brand;
+if(d.model)f.model.value=d.model;
+f.tagline.value=d.tagline||d.name||"";
+f.intro.value=d.intro||d.description||"";
+f.selling_points.value=(d.selling_points||[]).join("\n");
+if(d.official_price!=null)f.official_price.value=d.official_price;
+if(d.official_url)f.official_url.value=d.official_url;
+pendingVmall={variants:(d.variants||[]).map(v=>({...v,include:true,base_price:""})),colors:d.colors||[]};
+renderVmallMatrix();
+showMessage("已采集："+(d.name||"")+"，官网价 ¥"+(d.official_price??"—")+"；下方勾选配置、填基础价（选填），保存后自动添加")}
+catch(e){showMessage(e.message,true)}};
 
 $("#vmall-fetch-detail-btn").onclick=async()=>{const u=$("#vmall-fetch-url-detail").value.trim()||currentProduct.official_url||"";if(!u){showMessage("请先粘贴华为商城商品链接",true);return}if(!currentProduct)return;
  try{const d=await api("/products/fetch-vmall",{method:"POST",body:JSON.stringify({url:u})});
  if(!confirm("采集到："+(d.name||"?")+"，官网价 ¥"+(d.official_price??"—")+"，"+(d.variants||[]).length+" 个配置、"+(d.colors||[]).length+" 个颜色。确认应用到当前商品？"))return;
- try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:d.official_price,official_url:d.official_url,intro:currentProduct.intro?undefined:(d.description||null)})})}catch(e){}
+ try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:d.official_price,official_url:d.official_url,intro:currentProduct.intro?undefined:(d.intro||d.description||null),selling_points:currentProduct.selling_points&&currentProduct.selling_points.length?undefined:(d.selling_points||undefined)})})}catch(e){}
  let ok=0;
  for(const v of d.variants||[]){try{await api("/products/"+currentProduct.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});ok++}catch(e){}}
  for(const c of d.colors||[]){try{await api("/products/"+currentProduct.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c})});ok++}catch(e){}}
@@ -440,9 +465,23 @@ $("#vmall-fetch-detail-btn").onclick=async()=>{const u=$("#vmall-fetch-url-detai
 $("#product-edit-form").addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget;try{const resp=await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({brand:f.brand.value.trim(),model:f.model.value.trim(),tagline:f.tagline.value.trim()||null,intro:f.intro.value.trim()||null,selling_points:f.selling_points.value.split(/\n|，|,/).map(x=>x.trim()).filter(Boolean).slice(0,8)})});currentProduct=Object.assign({},currentProduct,resp);$("#product-edit-panel").classList.add("hidden");await openProductDetail(currentProduct);await loadProducts();showMessage("商品资料已更新")}catch(err){showMessage(err.message,true)}});
 $("#product-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{const created=await api("/products",{method:"POST",body:JSON.stringify({brand:f.get("brand"),model:f.get("model"),intro:f.get("intro")||null,tagline:f.get("tagline")||null,official_price:f.get("official_price")?Number(f.get("official_price")):null,official_url:f.get("official_url")?.trim()||null,selling_points:String(f.get("selling_points")||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean)})});
  let added=0;
- if(pendingVmall&&created&&created.id){
- for(const v of pendingVmall.variants){try{await api("/products/"+created.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});added++}catch(e){}}
- for(const c of pendingVmall.colors){try{await api("/products/"+created.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c})});added++}catch(e){}}
+ if(pendingVmall&&created&&created.id){
+ for(const v of pendingVmall.variants||[]){
+  if(v.include===false)continue;
+  try{
+   await api("/products/"+created.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});
+   added++;
+   if(v.base_price&&Number(v.base_price)>0){
+    try{
+     await api("/products/"+created.id+"/prices",{method:"POST",body:JSON.stringify({variant:v.display_name,price_type:"基础价格",price:Number(v.base_price),effective_date:new Date().toLocaleDateString("sv-SE")})});
+    }catch(e){}
+   }
+  }catch(e){}}
+ for(const c of pendingVmall.colors||[]){
+  try{
+   await api("/products/"+created.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c})});
+   added++;
+  }catch(e){}}
  pendingVmall=null}
  form.reset();$("#product-form-panel").classList.add("hidden");await loadProducts();
  showMessage(added?("商品已保存，自动添加 "+added+" 项配置/颜色（重复跳过）"):"商品已保存")}catch(err){showMessage(err.message,true)}});
