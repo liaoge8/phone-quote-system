@@ -2,6 +2,7 @@ from pathlib import Path
 
 from datetime import date, datetime
 from decimal import Decimal
+from decimal import Decimal
 
 import json
 import re
@@ -299,8 +300,20 @@ def create_product_color(
         ProductColor.color_name == body.color_name,
     ))
     if existing:
+        if body.image_url and body.image_url != (existing.image_url or ""):
+            existing.image_url = body.image_url
+            db.add(AuditLog(
+                actor_id=admin.id,
+                action="product_color.image_updated",
+                target_type="product_color",
+                target_id=str(existing.id),
+                detail={"product_id": product_id, "color_name": existing.color_name},
+            ))
+            db.commit()
+            db.refresh(existing)
+            return existing
         raise HTTPException(409, "该商品颜色已登记")
-    color = ProductColor(product_id=product_id, color_name=body.color_name)
+    color = ProductColor(product_id=product_id, **body.model_dump())
     db.add(color)
     db.flush()
     db.add(AuditLog(
@@ -566,3 +579,31 @@ def fetch_vmall_product(body: dict, _admin: User = Depends(require_admin)):
     parsed = _parse_vmall_html(html)
     parsed["official_url"] = url
     return parsed
+
+@router.patch("/{product_id}/variants/{variant_id}/official-price")
+def update_variant_official_price(product_id: int, variant_id: int, body: dict, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    if not db.get(Product, product_id):
+        raise HTTPException(404, "商品不存在")
+    variant = db.get(ProductVariant, variant_id)
+    if not variant or variant.product_id != product_id:
+        raise HTTPException(404, "配置不存在")
+    raw = str((body or {}).get("official_price", "")).strip()
+    if raw == "":
+        variant.official_price = None
+    else:
+        try:
+            value = Decimal(raw)
+        except Exception:
+            raise HTTPException(422, "官网价格式不正确")
+        if value <= 0:
+            raise HTTPException(422, "官网价必须大于 0")
+        variant.official_price = value
+    db.add(AuditLog(
+        actor_id=admin.id,
+        action="product_variant.official_price_updated",
+        target_type="product_variant",
+        target_id=str(variant.id),
+        detail={"product_id": product_id, "display_name": variant.display_name, "official_price": str(variant.official_price) if variant.official_price is not None else None},
+    ))
+    db.commit()
+    return {"id": variant.id, "display_name": variant.display_name, "official_price": variant.official_price}

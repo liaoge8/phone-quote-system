@@ -318,8 +318,9 @@ function renderProductCards(){
   body.append(card);
  });
 }
+let detailSeq=0;
 async function openProductDetail(p){
- currentProduct=p;selectedVariant="";history.replaceState(null,"","#product-"+p.id);$("#inline-variant-row").classList.toggle("hidden",me?.role!=="admin");$("#inline-color-row").classList.toggle("hidden",me?.role!=="admin");$("#detail-edit-info").classList.toggle("hidden",me?.role!=="admin");$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");$("#detail-add-color").classList.toggle("hidden",me?.role!=="admin");
+ const seq=++detailSeq;currentProduct=p;selectedVariant="";history.replaceState(null,"","#product-"+p.id);$("#inline-variant-row").classList.toggle("hidden",me?.role!=="admin");$("#inline-color-row").classList.toggle("hidden",me?.role!=="admin");$("#detail-edit-info").classList.toggle("hidden",me?.role!=="admin");$("#detail-add-variant").classList.toggle("hidden",me?.role!=="admin");$("#detail-add-color").classList.toggle("hidden",me?.role!=="admin");
  $("#product-detail").classList.remove("hidden");$("#products").parentElement.classList.add("hidden");
  $("#detail-brand").textContent=p.brand;$("#detail-name").textContent=p.model;$("#detail-tagline").textContent=p.tagline||"";$("#detail-intro").textContent=p.intro||"";(()=>{const ofb=$("#detail-official");ofb.replaceChildren();ofb.append(document.createTextNode("官网参考价："));
  if(p.official_price!=null){ofb.append(document.createTextNode("¥"+Number(p.official_price).toFixed(2)));
@@ -341,7 +342,8 @@ const points=$("#detail-selling-points");points.replaceChildren();(p.selling_poi
    api("/products/"+p.id+"/variants"),
    api("/products/"+p.id+"/colors")
   ]);
-  detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants,colors};
+  if(seq!==detailSeq)return;
+detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants,colors};
   (()=>{const cbox=$("#detail-colors");cbox.replaceChildren();cbox.append(document.createTextNode("厂家颜色："));
  if(!colors.length){cbox.append(document.createTextNode("暂未登记"))}
  else{
