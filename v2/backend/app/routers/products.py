@@ -243,6 +243,18 @@ def create_product_variant(
         ProductVariant.display_name == body.display_name,
     ))
     if existing and existing.is_active:
+        if body.official_price is not None and body.official_price != existing.official_price:
+            existing.official_price = body.official_price
+            db.add(AuditLog(
+                actor_id=admin.id,
+                action="product_variant.official_price_updated",
+                target_type="product_variant",
+                target_id=str(existing.id),
+                detail={"product_id": product_id, "display_name": existing.display_name, "official_price": str(existing.official_price)},
+            ))
+            db.commit()
+            db.refresh(existing)
+            return existing
         raise HTTPException(409, "该商品配置已存在")
     if existing:
         existing.is_active = True
