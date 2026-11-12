@@ -114,23 +114,14 @@ body.print-overview th,body.print-overview td{padding:6px 5px}}
 .mtable .msum button{padding:4px 12px;font-size:12px}
 #overview-panel tbody tr{cursor:pointer}
 #overview-panel tbody tr:hover{background:#f2f7ff}
-@media(min-width:769px){
-header{padding:15px max(20px,calc((100vw - 1240px)/2))}
-header strong{font-size:18px}
-main{margin:28px auto;padding:0 20px}
-.panel{padding:24px 22px;border-radius:var(--radius)}
-h1{font-size:25px}
-.product-cards{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
-#login{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);max-width:900px;margin:7vh auto;gap:0;padding:0;align-items:stretch}
-.login-hero{padding:56px 40px;border-radius:20px 0 0 20px;text-align:left;display:flex;flex-direction:column;justify-content:center}
-.login-badge{margin-bottom:20px}
-.login-head{font-size:31px}
-.login-sub{font-size:14px}
-.login-body{display:flex;align-items:center}
-.login-card{margin:0 26px 0 -46px;flex:1;box-shadow:0 24px 60px rgba(13,31,60,.22);position:relative;z-index:2}
-.login-foot{grid-column:1 / -1}
+/* 详情双列布局：左信息配置，右价格卡吸附 */
+.detail-cols{display:grid;gap:14px}
+.detail-col-side .detail-price{background:#f7f9fd;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:0}
+.detail-col-side .detail-metrics{margin-top:10px}
+@media(min-width:960px){
+.detail-cols{grid-template-columns:minmax(0,1fr) 330px;align-items:start;gap:0 22px}
+.detail-col-side{position:sticky;top:72px}
 .detail-price .amount{font-size:38px}
-.detail-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:680px){
 html{-webkit-text-size-adjust:100%;scroll-padding-top:12px}
@@ -236,26 +227,11 @@ main{padding:0 9px}
 <div class="product-tools"><input id="product-search" type="search" placeholder="搜索完整型号或商品名称"><select id="brand-filter"><option value="">全部品牌</option></select></div>
 <div id="products" class="product-cards"></div><div id="empty-products" class="empty hidden">暂无匹配商品，请新增商品档案。</div>
 </div>
-<div id="product-detail" class="panel hidden">
-<div class="detail-head"><div><div class="muted" id="detail-brand"></div><div class="detail-title" id="detail-name"></div></div><button class="secondary" id="back-products" type="button">返回</button></div>
-<div id="detail-tagline" style="font-size:13px;font-weight:600;margin-top:7px"></div><div id="detail-intro" class="muted" style="margin-top:5px"></div><ul id="detail-selling-points" class="muted" style="margin:6px 0 0;padding-left:18px"></ul>
-<div style="margin-top:12px"><div class="muted">选择配置</div><div id="detail-variants" class="variant-pills"></div><div id="inline-variant-row" class="hidden" style="display:flex;gap:6px;margin-top:8px"><input id="inline-variant-name" style="flex:1" placeholder="配置名，如 8GB+256GB"><button id="inline-variant-add" type="button">添加配置</button></div><div id="detail-colors" class="muted"></div><div id="inline-color-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="inline-color-name" style="flex:1" placeholder="颜色名，多个用逗号分隔"><button id="inline-color-add" type="button">添加颜色</button></div></div>
-<div class="detail-price"><div class="label">当前到手价</div><div id="detail-policy-price" class="amount">暂无报价</div></div>
-<div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div>
-<div id="detail-policy-note" class="detail-policy hidden"></div>
-<div id="detail-official" class="official-reference"></div><div id="official-edit-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="official-price-input" type="number" min="0.01" step="0.01" placeholder="官网参考价（元）" style="flex:1"><input id="official-url-input" placeholder="官网链接（选填）" style="flex:1.4"><button id="official-price-save" type="button">保存</button></div>
-<div id="vmall-fetch-detail-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="vmall-fetch-url-detail" placeholder="粘贴华为商城商品链接，采集配置/颜色/官网价" style="flex:2.4"><button id="vmall-fetch-detail-btn" type="button">采集</button></div>
-<div id="product-edit-panel" class="hidden"><form id="product-edit-form" class="field"><div class="grid">
-<div class="field"><label>品牌</label><input name="brand" required></div>
-<div class="field"><label>型号</label><input name="model" required></div>
-</div>
-<div class="field"><label>一句话介绍（选填）</label><input name="tagline"></div>
-<div class="field"><label>商品简介（选填）</label><textarea name="intro" rows="2"></textarea></div>
-<div class="field"><label>核心卖点（每行一条，最多8条）</label><textarea name="selling_points" rows="3" placeholder="例如：大容量电池"></textarea></div>
-<div class="actions"><button type="submit">保存资料</button><button type="button" class="secondary" id="cancel-product-edit">取消</button></div>
-</form></div>
-<div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div>
-<div class="actions" style="margin-top:12px"><button id="detail-edit-info" class="secondary hidden" type="button">编辑资料</button><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-color" class="secondary hidden" type="button">新增颜色</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策返利</button><button id="detail-archive" class="secondary hidden" type="button">停用（已停产）</button><button id="detail-delete" class="danger hidden" type="button">删除商品</button></div>
+<div id="product-detail" class="panel hidden"><div class="detail-head"><div><div class="muted" id="detail-brand"></div><div class="detail-title" id="detail-name"></div></div><button class="secondary" id="back-products" type="button">返回</button></div><div class="detail-cols">
+<div class="detail-col-main">
+<div id="detail-tagline" style="font-size:13px;font-weight:600;margin-top:7px"></div><div id="detail-intro" class="muted" style="margin-top:5px"></div><ul id="detail-selling-points" class="muted" style="margin:6px 0 0;padding-left:18px"></ul><div id="detail-selection" style="margin-top:12px"><div class="muted">选择配置</div><div id="detail-variants" class="variant-pills"></div><div id="inline-variant-row" class="hidden" style="display:flex;gap:6px;margin-top:8px"><input id="inline-variant-name" style="flex:1" placeholder="配置名，如 8GB+256GB"><button id="inline-variant-add" type="button">添加配置</button></div><div id="detail-colors" class="muted"></div><div id="inline-color-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="inline-color-name" style="flex:1" placeholder="颜色名，多个用逗号分隔"><button id="inline-color-add" type="button">添加颜色</button></div></div><div id="detail-policy-note" class="detail-policy hidden"></div><div id="product-edit-panel" class="hidden"><form id="product-edit-form" class="field"><div class="grid"><div class="field"><label>品牌</label><input name="brand" required></div><div class="field"><label>型号</label><input name="model" required></div></div><div class="field"><label>一句话介绍（选填）</label><input name="tagline"></div><div class="field"><label>商品简介（选填）</label><textarea name="intro" rows="2"></textarea></div><div class="field"><label>核心卖点（每行一条，最多8条）</label><textarea name="selling_points" rows="3" placeholder="例如：大容量电池"></textarea></div><div class="actions"><button type="submit">保存资料</button><button type="button" class="secondary" id="cancel-product-edit">取消</button></div></form></div><div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div><div class="actions" style="margin-top:12px"><button id="detail-edit-info" class="secondary hidden" type="button">编辑资料</button><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-color" class="secondary hidden" type="button">新增颜色</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策返利</button><button id="detail-archive" class="secondary hidden" type="button">停用（已停产）</button><button id="detail-delete" class="danger hidden" type="button">删除商品</button></div></div>
+<div class="detail-col-side">
+<div class="detail-price"><div class="label">当前到手价</div><div id="detail-policy-price" class="amount">暂无报价</div></div><div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div><div id="detail-official" class="official-reference"></div><div id="official-edit-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="official-price-input" type="number" min="0.01" step="0.01" placeholder="官网参考价（元）" style="flex:1"><input id="official-url-input" placeholder="官网链接（选填）" style="flex:1.4"><button id="official-price-save" type="button">保存</button></div><div id="vmall-fetch-detail-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="vmall-fetch-url-detail" placeholder="粘贴华为商城商品链接，采集配置/颜色/官网价" style="flex:2.4"><button id="vmall-fetch-detail-btn" type="button">采集</button></div></div>
 </div>
 <div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div><button id="new-price-btn">新增价格</button></div><div class="grid" style="margin:12px 0"><div class="field"><label>开始日期</label><input id="price-start" type="date"></div><div class="field"><label>结束日期</label><input id="price-end" type="date"></div><div class="field"><label>按月查询</label><input id="price-month" type="month"></div><div class="field"><label>按年查询</label><input id="price-year" type="number" min="2000" max="2100" placeholder="例如 2026"></div><div class="field"><label>指定日期（查询当日及之前记录）</label><input id="price-asof" type="date"></div><div class="field" style="justify-content:end"><button id="filter-prices-btn" class="secondary">筛选历史</button><button id="clear-price-filter-btn" class="secondary">清除筛选</button></div></div>
 <div id="price-form-panel" class="hidden"><form id="price-form" class="field"><div class="grid">
