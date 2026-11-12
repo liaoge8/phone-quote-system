@@ -6,58 +6,81 @@
 <meta name="color-scheme" content="light">
 <title>手机报价档案系统</title>
 <style>
-:root{--navy:#0d1f3c;--navy2:#16305e;--brand:#2563eb;--brand2:#3b82f6;--brand3:#60a5fa;--bg:#eef1f6;--card:#ffffff;--line:#e4e9f2;--text:#1a2438;--dim:#5b6b85;--mute:#8493ab;--ok:#0d9463;--warn:#b45309;--danger:#dc2626;--radius:16px;--radius-s:12px;--shadow:0 1px 2px rgba(16,32,64,.05),0 10px 30px rgba(16,32,64,.06);font-family:"PingFang SC","Microsoft YaHei",Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);background:var(--bg);font-synthesis:none;letter-spacing:-.005em}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);min-height:100vh}button,input,textarea,select{font:inherit;color:inherit}
-::selection{background:rgba(37,99,235,.18)}
-::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#c3cdda;border-radius:10px;border:2px solid var(--bg)}::-webkit-scrollbar-thumb:hover{background:#a9b6c9}::-webkit-scrollbar-track{background:transparent}
+/* ============================================================
+   手机报价档案系统 · 霓虹科技主题 (NEON TECH v3)
+   深空底 · 极光渐变 · 玻璃拟态 · 打印样式保留
+   ============================================================ */
+:root{
+--navy:#05070d;--navy2:#0a0f24;--brand:#8b5cf6;--brand2:#22d3ee;--brand3:#f471b5;
+--bg:#05070d;--card:#0c1122;--line:rgba(124,146,255,.15);--text:#eef3ff;--dim:#c0cdf0;--mute:#7e8db8;
+--ok:#2ee6a8;--warn:#ffc857;--danger:#ff5d7a;--radius:16px;--radius-s:12px;
+--price:#ffc94a;--price-grad:linear-gradient(100deg,#ffe08a 0%,#ffb43a 48%,#ff8a5c 100%);
+--grad:linear-gradient(120deg,#22d3ee 0%,#8b5cf6 52%,#f471b5 100%);
+--glow:0 0 0 1px rgba(139,92,246,.4),0 4px 28px rgba(139,92,246,.30);
+--shadow:0 4px 18px rgba(0,0,0,.4),0 14px 44px rgba(0,0,0,.45);
+font-family:"PingFang SC","Microsoft YaHei",Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);background:var(--bg);font-synthesis:none;letter-spacing:-.005em;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:
+radial-gradient(1000px 560px at 88% -12%,rgba(139,92,246,.20),transparent 62%),
+radial-gradient(900px 520px at -12% 28%,rgba(34,211,238,.13),transparent 62%),
+radial-gradient(860px 560px at 72% 112%,rgba(244,113,181,.12),transparent 62%),
+linear-gradient(rgba(124,146,255,.04) 1px,transparent 1px),
+linear-gradient(90deg,rgba(124,146,255,.04) 1px,transparent 1px),
+var(--bg);
+background-attachment:fixed;background-size:auto,auto,auto,44px 44px,44px 44px,auto}
+button,input,textarea,select{font:inherit;color:inherit}
+::selection{background:rgba(139,92,246,.35);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#222b4d;border-radius:10px;border:2px solid var(--bg)}::-webkit-scrollbar-thumb:hover{background:#32407a}::-webkit-scrollbar-track{background:transparent}
 :focus-visible{outline:2px solid var(--brand2);outline-offset:2px;border-radius:8px}
-button{cursor:pointer;border:0;border-radius:12px;padding:11px 18px;background:linear-gradient(180deg,var(--brand2),var(--brand));color:#fff;font-weight:600;box-shadow:0 1px 2px rgba(37,99,235,.3),0 4px 14px rgba(37,99,235,.22);transition:filter .15s,box-shadow .15s,transform .15s}
-button:hover{filter:brightness(1.06);box-shadow:0 2px 4px rgba(37,99,235,.28),0 6px 18px rgba(37,99,235,.26)}
+@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+button{cursor:pointer;border:0;border-radius:12px;padding:11px 18px;background:var(--grad);background-size:180% 180%;color:#fff;font-weight:600;box-shadow:0 4px 20px rgba(139,92,246,.32);transition:filter .15s,box-shadow .15s,transform .15s;animation:gradShift 6s ease infinite}
+button:hover{filter:brightness(1.12);box-shadow:0 6px 26px rgba(139,92,246,.45)}
 button:active{transform:translateY(1px)}
-button.secondary{background:#fff;color:var(--brand);border:1px solid #c6d4ec;box-shadow:0 1px 2px rgba(16,32,64,.06)}
-button.secondary:hover{background:#f4f8ff;border-color:var(--brand3);filter:none}
-button.danger{background:#fff;color:var(--danger);border:1px solid #f3c2c2;box-shadow:0 1px 2px rgba(16,32,64,.06)}
-button.danger:hover{background:#fef4f4;filter:none}
+button.secondary{background:rgba(124,146,255,.07);color:var(--text);border:1px solid var(--line);box-shadow:none}
+button.secondary:hover{background:rgba(124,146,255,.13);border-color:var(--brand2);color:var(--brand2);filter:none}
+button.danger{background:rgba(255,93,122,.10);color:var(--danger);border:1px solid rgba(255,93,122,.35);box-shadow:none}
+button.danger:hover{background:rgba(255,93,122,.2);filter:none}
 button:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
-header{position:sticky;top:0;z-index:40;background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 78%,#1c3a6e 100%);color:#fff;padding:14px max(16px,calc((100vw - 1240px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 16px rgba(13,31,60,.35)}
+header{position:sticky;top:0;z-index:40;background:linear-gradient(120deg,#070a16 0%,#0c1230 78%,#141a44 100%);color:#fff;padding:14px max(16px,calc((100vw - 1240px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 16px rgba(0,0,0,.5);border-bottom:1px solid rgba(124,146,255,.18)}
 header strong{font-size:16px;font-weight:700;letter-spacing:.01em;display:flex;align-items:center;gap:9px}
-header strong::before{content:"";width:8px;height:22px;border-radius:3px;background:linear-gradient(180deg,var(--brand3),var(--brand));flex:0 0 auto}
-header button{padding:7px 12px;font-size:12px;background:rgba(255,255,255,.09);color:#dbe7ff;border:1px solid rgba(255,255,255,.16);box-shadow:none}
-header button:hover{background:rgba(255,255,255,.17);filter:none}
+header strong::before{content:"";width:8px;height:22px;border-radius:3px;background:var(--grad);background-size:180% 180%;box-shadow:0 0 10px rgba(139,92,246,.6);animation:gradShift 6s ease infinite;flex:0 0 auto}
+header button{padding:7px 12px;font-size:12px;background:rgba(255,255,255,.07);color:#d5defc;border:1px solid rgba(124,146,255,.25);box-shadow:none;animation:none}
+header button:hover{background:rgba(139,92,246,.2);border-color:var(--brand2);filter:none}
 .muted{color:var(--mute);font-size:13px}.userline{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.82)}
 #userline span{color:#fff;font-weight:650}
 main{max-width:1240px;margin:22px auto;padding:0 14px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.panel{background:linear-gradient(180deg,rgba(124,146,255,.06),rgba(124,146,255,.015)) padding-box,linear-gradient(160deg,rgba(124,146,255,.3),rgba(124,146,255,.12)) border-box;border:1px solid transparent;border-radius:var(--radius);padding:18px 16px;margin-bottom:16px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
 h1{font-size:22px;font-weight:750;margin:0 0 6px;letter-spacing:-.01em}h2{font-size:16px;font-weight:700;margin:0 0 14px}
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-size:12px;color:var(--dim);font-weight:550}
-input,textarea,select{width:100%;border:1px solid #d5deec;border-radius:11px;padding:11px 13px;background:#fbfcfe;color:var(--text);transition:border-color .15s,box-shadow .15s,background .15s}
-input:hover,textarea:hover,select:hover{border-color:#b9c8e2;background:#fff}
-input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(59,130,246,.16);background:#fff}
-input::placeholder,textarea::placeholder{color:#a5b1c4}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:rgba(124,146,255,.06);color:var(--text);transition:border-color .15s,box-shadow .15s,background .15s}
+input:hover,textarea:hover,select:hover{border-color:var(--line)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(34,211,238,.16),0 0 14px rgba(34,211,238,.1);background:rgba(124,146,255,.09)}
+input::placeholder,textarea::placeholder{color:#5e6c95}
 .field textarea{min-height:72px;resize:vertical}
-select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#7b8aa5 50%),linear-gradient(135deg,#7b8aa5 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px}
-select option{background:#fff;color:var(--text)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#7e8db8 50%),linear-gradient(135deg,#7e8db8 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px}
+select option{background:#0c1122;color:var(--text)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:11px 10px;border-bottom:1px solid #edf1f7;vertical-align:middle}
-th{font-size:11px;color:var(--mute);font-weight:650;text-transform:uppercase;letter-spacing:.06em;background:#f5f8fc}
-tbody tr:hover{background:#f6f9fd}
-.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
-.tag{display:inline-block;padding:3px 9px;border-radius:20px;background:#e9f0ff;color:#2563eb;font-size:11px;font-weight:600;border:1px solid #d4e2ff}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid rgba(124,146,255,.1);vertical-align:middle}
+th{font-size:11px;color:var(--mute);font-weight:650;text-transform:uppercase;letter-spacing:.06em;background:rgba(124,146,255,.07)}
+tbody tr:hover{background:rgba(124,146,255,.06)}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:rgba(10,15,36,.6)}
+.tag{display:inline-block;padding:3px 9px;border-radius:20px;background:rgba(139,92,246,.14);color:#b9a4ff;font-size:11px;font-weight:600;border:1px solid rgba(139,92,246,.35)}
 .hidden{display:none!important}
-.notice{padding:10px 13px;border-radius:11px;background:#fef7e8;color:var(--warn);border:1px solid #f5e3b8;font-size:13px;margin-bottom:12px;line-height:1.55}
-.notice.error{background:#fef1f0;color:var(--danger);border-color:#f8d3d1}
+.notice{padding:10px 13px;border-radius:11px;background:rgba(255,200,87,.1);color:var(--warn);border:1px solid rgba(255,200,87,.35);font-size:13px;margin-bottom:12px;line-height:1.55}
+.notice.error{background:rgba(255,93,122,.1);color:var(--danger);border-color:rgba(255,93,122,.35)}
 .empty{text-align:center;color:var(--mute);padding:30px;font-size:13px}
 #login{max-width:430px;margin:0 auto;padding:0 0 26px}
-.login-hero{background:linear-gradient(150deg,var(--navy) 0%,var(--navy2) 55%,#1d4180 100%);color:#fff;padding:44px 30px 58px;border-radius:0 0 26px 26px;text-align:center;position:relative;overflow:hidden}
-.login-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(340px 200px at 78% -30px,rgba(59,130,246,.35),transparent 70%),radial-gradient(260px 180px at 12% 110%,rgba(56,189,248,.16),transparent 70%)}
-.login-badge{position:relative;display:inline-block;padding:4px 14px;border-radius:20px;border:1px solid rgba(147,197,253,.45);background:rgba(59,130,246,.18);color:#bfdbfe;font-size:11px;letter-spacing:.14em;margin-bottom:16px}
-.login-head{position:relative;font-size:27px;font-weight:750;margin:0 0 8px;letter-spacing:.02em}
-.login-sub{position:relative;color:rgba(219,234,254,.78);font-size:13px;line-height:1.7;margin:0}
-.login-card{position:relative;margin:-34px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px 20px;box-shadow:0 18px 44px rgba(13,31,60,.18)}
+.login-hero{background:linear-gradient(150deg,#070a16 0%,#10173a 55%,#1a1444 100%);color:#fff;padding:44px 30px 58px;border-radius:0 0 26px 26px;text-align:center;position:relative;overflow:hidden}
+.login-hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--grad);background-size:200% 200%;animation:gradShift 8s ease infinite}
+.login-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(340px 200px at 78% -30px,rgba(139,92,246,.35),transparent 70%),radial-gradient(260px 180px at 12% 110%,rgba(34,211,238,.16),transparent 70%)}
+.login-badge{position:relative;display:inline-block;padding:4px 14px;border-radius:20px;border:1px solid rgba(139,92,246,.45);background:rgba(139,92,246,.16);color:#c9b8ff;font-size:11px;letter-spacing:.14em;margin-bottom:16px}
+.login-head{position:relative;font-size:27px;font-weight:750;margin:0 0 8px;letter-spacing:.02em;background:var(--grad);background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gradShift 8s ease infinite}
+.login-sub{position:relative;color:rgba(192,205,240,.78);font-size:13px;line-height:1.7;margin:0}
+.login-card{position:relative;margin:-34px 16px 0;background:linear-gradient(180deg,rgba(124,146,255,.08),rgba(124,146,255,.02)) padding-box,linear-gradient(160deg,rgba(34,211,238,.45),rgba(139,92,246,.45),rgba(244,113,181,.35)) border-box;border:1px solid transparent;border-radius:var(--radius);padding:22px 20px 20px;box-shadow:var(--glow);backdrop-filter:blur(8px)}
 .login-title{margin-bottom:16px}.login-title h1{font-size:18px}.login-title p{color:var(--mute);font-size:12px;line-height:1.6;margin:4px 0 0}
 #login .field button{width:100%;margin-top:4px}
 .login-foot{text-align:center;color:var(--mute);font-size:11px;margin:14px 0 0}
@@ -74,49 +97,49 @@ body.print-overview th,body.print-overview td{padding:6px 5px}}
 
 .product-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin:0 0 14px}
 .product-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.product-card{border:1px solid var(--line);border-radius:var(--radius);padding:15px;background:var(--card);cursor:pointer;min-width:0;position:relative;overflow:hidden;transition:border-color .18s,box-shadow .18s,transform .18s;box-shadow:0 1px 2px rgba(16,32,64,.05)}
-.product-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--brand3),var(--brand));opacity:0;transition:opacity .18s}
-.product-card:hover{border-color:#b9cdf0;box-shadow:0 10px 30px rgba(37,99,235,.14);transform:translateY(-2px)}
+.product-card{border:1px solid var(--line);border-radius:var(--radius);padding:15px;background:linear-gradient(180deg,rgba(124,146,255,.06),rgba(124,146,255,.02));cursor:pointer;min-width:0;position:relative;overflow:hidden;transition:border-color .18s,box-shadow .18s,transform .18s;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.product-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--grad);opacity:0;transition:opacity .18s}
+.product-card:hover{border-color:rgba(139,92,246,.55);box-shadow:var(--glow);transform:translateY(-2px)}
 .product-card:hover::before{opacity:1}
 .product-card:active{transform:translateY(0)}
 .product-card .brand{font-size:11px;color:var(--mute);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em}
 .product-card strong{font-size:16px;font-weight:700;display:block;overflow-wrap:anywhere}
 .product-card .sub{font-size:12px;color:var(--mute);margin-top:7px;line-height:1.5}
-.product-card .from{font-size:14px;font-weight:700;color:var(--ok);margin-top:10px;font-variant-numeric:tabular-nums}
+.product-card .from{font-size:14px;font-weight:800;color:var(--price);margin-top:10px;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(255,180,58,.25)}
 .detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .detail-title{font-size:22px;font-weight:750;line-height:1.25;letter-spacing:-.01em}
 .variant-pills{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
-.variant-pill{background:#f2f5fa;color:#3a4a66;border:1px solid #dbe3ef;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;min-height:26px;line-height:1.2;transition:all .15s}
-.variant-pill.active{background:#e9f0ff;color:var(--brand);border-color:var(--brand2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.variant-pill{background:rgba(124,146,255,.07);color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;min-height:26px;line-height:1.2;transition:all .15s}
+.variant-pill.active{background:var(--grad);background-size:180% 180%;color:#fff;border-color:transparent;box-shadow:0 0 12px rgba(139,92,246,.4);animation:gradShift 6s ease infinite}
 .detail-price{padding:14px 0 8px}
 .detail-price .label{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
-.detail-price .amount{font-size:34px;font-weight:800;line-height:1.2;margin-top:4px;background:linear-gradient(95deg,var(--navy2),var(--brand) 70%);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+.detail-price .amount{font-size:34px;font-weight:800;line-height:1.2;margin-top:4px;background:var(--price-grad);background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gradShift 6s ease infinite;font-variant-numeric:tabular-nums}
 .detail-metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0}
-.detail-metric{background:#f5f8fc;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.detail-metric{background:rgba(124,146,255,.06);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
 .detail-metric span{display:block;color:var(--mute);font-size:10px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
 .detail-metric strong{font-size:15px;font-variant-numeric:tabular-nums}
-.detail-policy{font-size:13px;line-height:1.6;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin:9px 0}
+.detail-policy{font-size:13px;line-height:1.6;background:rgba(255,200,87,.07);border:1px solid rgba(255,200,87,.3);border-radius:11px;padding:10px 12px;margin:9px 0}
 .official-reference{font-size:11px;color:var(--mute);margin:9px 0 3px}
 .detail-history{border-top:1px solid var(--line);margin-top:10px;padding-top:12px}
-.history-row{display:grid;grid-template-columns:80px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #eef1f7;font-size:12px;color:var(--dim)}
+.history-row{display:grid;grid-template-columns:80px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(124,146,255,.1);font-size:12px;color:var(--dim)}
 .history-row .muted{font-size:11px}
-.hidden{display:none!important}
-.pill-x{border:1px solid #f3c6c6;background:#fef2f2;color:var(--danger);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:12px;line-height:1.2;transition:background .15s}
-.pill-x:hover{background:#fee8e8}
+.pill-x{border:1px solid rgba(255,93,122,.35);background:rgba(255,93,122,.1);color:var(--danger);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:12px;line-height:1.2;transition:background .15s}
+.pill-x:hover{background:rgba(255,93,122,.22)}
 .mtable{width:100%;border-collapse:collapse;font-size:13px}
-.mtable th{font-size:11px;color:var(--mute);text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);font-weight:650;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;background:#f5f8fc}
-.mtable td{padding:8px 9px;border-bottom:1px solid #eef1f7;text-align:left;vertical-align:middle}
-.mtable tbody tr:nth-child(even){background:#f8fafd}
+.mtable th{font-size:11px;color:var(--mute);text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);font-weight:650;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;background:rgba(124,146,255,.07)}
+.mtable td{padding:8px 9px;border-bottom:1px solid rgba(124,146,255,.1);text-align:left;vertical-align:middle}
+.mtable tbody tr:nth-child(even){background:rgba(124,146,255,.04)}
 .mtable input[type=checkbox]{transform:scale(1.3);cursor:pointer;vertical-align:middle;accent-color:var(--brand)}
-.mtable input[type=number]{width:130px;padding:6px 8px;border:1px solid #d5deec;border-radius:8px;font-size:13px;background:#fff}
+.mtable input[type=number]{width:130px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:rgba(124,146,255,.06);color:var(--text)}
 .mtable .price{color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
 .mtable .msum{margin-top:9px;font-size:12px;color:var(--mute);display:flex;gap:6px;align-items:center}
 .mtable .msum button{padding:4px 12px;font-size:12px}
 #overview-panel tbody tr{cursor:pointer}
-#overview-panel tbody tr:hover{background:#f2f7ff}
-/* 详情双列布局：左信息配置，右价格卡吸附 */
+#overview-panel tbody tr:hover{background:rgba(34,211,238,.07)}
+#overview-panel tbody td:nth-child(7){color:var(--price);font-weight:800;text-shadow:0 0 10px rgba(255,180,58,.3)}
+/* 详情双列布局 */
 .detail-cols{display:grid;gap:14px}
-.detail-col-side .detail-price{background:#f7f9fd;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:0}
+.detail-col-side .detail-price{background:rgba(124,146,255,.06);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:0}
 .detail-col-side .detail-metrics{margin-top:10px}
 @media(min-width:960px){
 .detail-cols{grid-template-columns:minmax(0,1fr) 330px;align-items:start;gap:0 22px}
@@ -189,6 +212,7 @@ main{padding:0 9px}
 #app>.toolbar .actions button{font-size:12px;padding:9px 7px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -227,11 +251,31 @@ main{padding:0 9px}
 <div class="product-tools"><input id="product-search" type="search" placeholder="搜索完整型号或商品名称"><select id="brand-filter"><option value="">全部品牌</option></select></div>
 <div id="products" class="product-cards"></div><div id="empty-products" class="empty hidden">暂无匹配商品，请新增商品档案。</div>
 </div>
-<div id="product-detail" class="panel hidden"><div class="detail-head"><div><div class="muted" id="detail-brand"></div><div class="detail-title" id="detail-name"></div></div><button class="secondary" id="back-products" type="button">返回</button></div><div class="detail-cols">
+<div id="product-detail" class="panel hidden">
+<div class="detail-head"><div><div class="muted" id="detail-brand"></div><div class="detail-title" id="detail-name"></div></div><button class="secondary" id="back-products" type="button">返回</button></div>
+<div class="detail-cols">
 <div class="detail-col-main">
-<div id="detail-tagline" style="font-size:13px;font-weight:600;margin-top:7px"></div><div id="detail-intro" class="muted" style="margin-top:5px"></div><ul id="detail-selling-points" class="muted" style="margin:6px 0 0;padding-left:18px"></ul><div id="detail-selection" style="margin-top:12px"><div class="muted">选择配置</div><div id="detail-variants" class="variant-pills"></div><div id="inline-variant-row" class="hidden" style="display:flex;gap:6px;margin-top:8px"><input id="inline-variant-name" style="flex:1" placeholder="配置名，如 8GB+256GB"><button id="inline-variant-add" type="button">添加配置</button></div><div id="detail-colors" class="muted"></div><div id="inline-color-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="inline-color-name" style="flex:1" placeholder="颜色名，多个用逗号分隔"><button id="inline-color-add" type="button">添加颜色</button></div></div><div id="detail-policy-note" class="detail-policy hidden"></div><div id="product-edit-panel" class="hidden"><form id="product-edit-form" class="field"><div class="grid"><div class="field"><label>品牌</label><input name="brand" required></div><div class="field"><label>型号</label><input name="model" required></div></div><div class="field"><label>一句话介绍（选填）</label><input name="tagline"></div><div class="field"><label>商品简介（选填）</label><textarea name="intro" rows="2"></textarea></div><div class="field"><label>核心卖点（每行一条，最多8条）</label><textarea name="selling_points" rows="3" placeholder="例如：大容量电池"></textarea></div><div class="actions"><button type="submit">保存资料</button><button type="button" class="secondary" id="cancel-product-edit">取消</button></div></form></div><div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div><div class="actions" style="margin-top:12px"><button id="detail-edit-info" class="secondary hidden" type="button">编辑资料</button><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-color" class="secondary hidden" type="button">新增颜色</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策返利</button><button id="detail-archive" class="secondary hidden" type="button">停用（已停产）</button><button id="detail-delete" class="danger hidden" type="button">删除商品</button></div></div>
+<div id="detail-tagline" style="font-size:13px;font-weight:600;margin-top:7px"></div><div id="detail-intro" class="muted" style="margin-top:5px"></div><ul id="detail-selling-points" class="muted" style="margin:6px 0 0;padding-left:18px"></ul>
+<div id="detail-selection" style="margin-top:12px"><div class="muted">选择配置</div><div id="detail-variants" class="variant-pills"></div><div id="inline-variant-row" class="hidden" style="display:flex;gap:6px;margin-top:8px"><input id="inline-variant-name" style="flex:1" placeholder="配置名，如 8GB+256GB"><button id="inline-variant-add" type="button">添加配置</button></div><div id="detail-colors" class="muted"></div><div id="inline-color-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="inline-color-name" style="flex:1" placeholder="颜色名，多个用逗号分隔"><button id="inline-color-add" type="button">添加颜色</button></div></div>
+<div id="detail-policy-note" class="detail-policy hidden"></div>
+<div id="product-edit-panel" class="hidden"><form id="product-edit-form" class="field"><div class="grid">
+<div class="field"><label>品牌</label><input name="brand" required></div>
+<div class="field"><label>型号</label><input name="model" required></div>
+</div>
+<div class="field"><label>一句话介绍（选填）</label><input name="tagline"></div>
+<div class="field"><label>商品简介（选填）</label><textarea name="intro" rows="2"></textarea></div>
+<div class="field"><label>核心卖点（每行一条，最多8条）</label><textarea name="selling_points" rows="3" placeholder="例如：大容量电池"></textarea></div>
+<div class="actions"><button type="submit">保存资料</button><button type="button" class="secondary" id="cancel-product-edit">取消</button></div>
+</form></div>
+<div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div>
+<div class="actions" style="margin-top:12px"><button id="detail-edit-info" class="secondary hidden" type="button">编辑资料</button><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-color" class="secondary hidden" type="button">新增颜色</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策返利</button><button id="detail-archive" class="secondary hidden" type="button">停用（已停产）</button><button id="detail-delete" class="danger hidden" type="button">删除商品</button></div>
+</div>
 <div class="detail-col-side">
-<div class="detail-price"><div class="label">当前到手价</div><div id="detail-policy-price" class="amount">暂无报价</div></div><div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div><div id="detail-official" class="official-reference"></div><div id="official-edit-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="official-price-input" type="number" min="0.01" step="0.01" placeholder="官网参考价（元）" style="flex:1"><input id="official-url-input" placeholder="官网链接（选填）" style="flex:1.4"><button id="official-price-save" type="button">保存</button></div><div id="vmall-fetch-detail-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="vmall-fetch-url-detail" placeholder="粘贴华为商城商品链接，采集配置/颜色/官网价" style="flex:2.4"><button id="vmall-fetch-detail-btn" type="button">采集</button></div></div>
+<div class="detail-price"><div class="label">当前到手价</div><div id="detail-policy-price" class="amount">暂无报价</div></div>
+<div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div>
+<div id="detail-official" class="official-reference"></div><div id="official-edit-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="official-price-input" type="number" min="0.01" step="0.01" placeholder="官网参考价（元）" style="flex:1"><input id="official-url-input" placeholder="官网链接（选填）" style="flex:1.4"><button id="official-price-save" type="button">保存</button></div>
+<div id="vmall-fetch-detail-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="vmall-fetch-url-detail" placeholder="粘贴华为商城商品链接，采集配置/颜色/官网价" style="flex:2.4"><button id="vmall-fetch-detail-btn" type="button">采集</button></div>
+</div>
 </div>
 <div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div><button id="new-price-btn">新增价格</button></div><div class="grid" style="margin:12px 0"><div class="field"><label>开始日期</label><input id="price-start" type="date"></div><div class="field"><label>结束日期</label><input id="price-end" type="date"></div><div class="field"><label>按月查询</label><input id="price-month" type="month"></div><div class="field"><label>按年查询</label><input id="price-year" type="number" min="2000" max="2100" placeholder="例如 2026"></div><div class="field"><label>指定日期（查询当日及之前记录）</label><input id="price-asof" type="date"></div><div class="field" style="justify-content:end"><button id="filter-prices-btn" class="secondary">筛选历史</button><button id="clear-price-filter-btn" class="secondary">清除筛选</button></div></div>
 <div id="price-form-panel" class="hidden"><form id="price-form" class="field"><div class="grid">
@@ -504,55 +548,96 @@ $("#capture-overview-btn").onclick=()=>{document.body.classList.add("print-overv
 $("#new-product-btn").onclick=()=>$("#product-form-panel").classList.toggle("hidden");
 $("#cancel-product").onclick=()=>$("#product-form-panel").classList.add("hidden");$("#detail-archive").onclick=async()=>{const reason=prompt("请输入停用原因（至少5个字）");if(reason===null)return;if(reason.trim().length<5){alert("停用原因至少5个字");return}if(!confirm("确认停用 "+currentProduct.brand+" "+currentProduct.model+"？价格历史将保留，可随时在「已归档商品」中恢复。"))return;try{await api("/products/"+currentProduct.id+"/archive",{method:"PATCH",body:JSON.stringify({reason:reason.trim()})});showMessage("商品已停用");$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden");await loadProducts()}catch(e){showMessage(e.message,true)}};$("#detail-delete").onclick=async()=>{if(!confirm("确认彻底删除 "+currentProduct.brand+" "+currentProduct.model+"？其全部价格历史、ST返利、政策记录与截图将一并删除，不可恢复！"))return;if(!confirm("再次确认：删除操作不可恢复，是否继续？"))return;try{await api("/products/"+currentProduct.id,{method:"DELETE"});showMessage("商品已删除");$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden");await loadProducts()}catch(e){showMessage(e.message,true)}};$("#detail-edit-info").onclick=()=>{if(!currentProduct||me?.role!=="admin")return;const f=$("#product-edit-form");f.brand.value=currentProduct.brand||"";f.model.value=currentProduct.model||"";f.tagline.value=currentProduct.tagline||"";f.intro.value=currentProduct.intro||"";f.selling_points.value=(currentProduct.selling_points||[]).join("\n");$("#product-edit-panel").classList.remove("hidden");$("#product-edit-panel").scrollIntoView({behavior:"smooth",block:"start"})};
 $("#cancel-product-edit").onclick=()=>$("#product-edit-panel").classList.add("hidden");
-$("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admin")return;
- const v=$("#official-price-input").value.trim();
- if(v&&!/^\d+(\.\d{1,2})?$/.test(v)){showMessage("官网价格式不正确（最多两位小数）",true);return}
- const url=$("#official-url-input").value.trim()||null;
- const vr=(detailCache.registeredVariants||[]).find(z=>z.display_name===selectedVariant);
- if(!vr){showMessage("请先选择一个有效配置",true);return}
- try{const resp=await api("/products/"+currentProduct.id+"/variants/"+vr.id+"/official-price",{method:"PATCH",body:JSON.stringify({official_price:v?Number(v):null})});
-  vr.official_price=resp.official_price;
-  try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_url:url})})}catch(e){}
-  await openProductDetail(currentProduct);showMessage("官网参考价已保存（"+selectedVariant+"）")}
+$("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admin")return;
+
+ const v=$("#official-price-input").value.trim();
+
+ if(v&&!/^\d+(\.\d{1,2})?$/.test(v)){showMessage("官网价格式不正确（最多两位小数）",true);return}
+
+ const url=$("#official-url-input").value.trim()||null;
+
+ const vr=(detailCache.registeredVariants||[]).find(z=>z.display_name===selectedVariant);
+
+ if(!vr){showMessage("请先选择一个有效配置",true);return}
+
+ try{const resp=await api("/products/"+currentProduct.id+"/variants/"+vr.id+"/official-price",{method:"PATCH",body:JSON.stringify({official_price:v?Number(v):null})});
+
+  vr.official_price=resp.official_price;
+
+  try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_url:url})})}catch(e){}
+
+  await openProductDetail(currentProduct);showMessage("官网参考价已保存（"+selectedVariant+"）")}
+
  catch(e){showMessage(e.message,true)}};
 $("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
-function renderVmallMatrix(){
- const box=$("#vmall-matrix-box"),grid=$("#vmall-matrix"),cwrap=$("#vmall-colors");
- if(!box||!grid||!cwrap)return;
- if(!pendingVmall){box.classList.add("hidden");return}
- box.classList.remove("hidden");grid.replaceChildren();cwrap.replaceChildren();
- const vars=pendingVmall.variants||[];
- const tbl=document.createElement("table");tbl.className="mtable";
- const thead=document.createElement("thead");const hr=document.createElement("tr");
- ["选","配置","官网价","基础价（渠道进价，选填）"].forEach(h=>{const th=document.createElement("th");th.textContent=h;hr.append(th)});
- thead.append(hr);tbl.append(thead);
- const tbody=document.createElement("tbody");
- vars.forEach(v=>{
-  const tr=document.createElement("tr");
-  const td1=document.createElement("td");const cb=document.createElement("input");cb.type="checkbox";cb.checked=v.include!==false;cb.onchange=()=>{v.include=cb.checked;updateVmallSum()};td1.append(cb);
-  const td2=document.createElement("td");td2.textContent=v.display_name;
-  const td3=document.createElement("td");td3.className="price";td3.textContent="¥"+Number(v.price).toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
-  const td4=document.createElement("td");const bp=document.createElement("input");bp.type="number";bp.min="0";bp.step="0.01";bp.placeholder="选填";bp.value=v.base_price||"";bp.oninput=()=>{v.base_price=bp.value};td4.append(bp);
-  tr.append(td1,td2,td3,td4);tbody.append(tr)});
- tbl.append(tbody);grid.append(tbl);
- const sum=document.createElement("div");sum.className="msum";
- const selAll=document.createElement("button");selAll.type="button";selAll.className="secondary";selAll.textContent="全选";selAll.onclick=()=>{vars.forEach(v=>v.include=true);renderVmallMatrix()};
- const selNone=document.createElement("button");selNone.type="button";selNone.className="secondary";selNone.textContent="全不选";selNone.onclick=()=>{vars.forEach(v=>v.include=false);renderVmallMatrix()};
- const span=document.createElement("span");span.id="vmall-matrix-sum";
- sum.append(selAll,selNone,span);grid.append(sum);
- updateVmallSum();
+function renderVmallMatrix(){
+
+ const box=$("#vmall-matrix-box"),grid=$("#vmall-matrix"),cwrap=$("#vmall-colors");
+
+ if(!box||!grid||!cwrap)return;
+
+ if(!pendingVmall){box.classList.add("hidden");return}
+
+ box.classList.remove("hidden");grid.replaceChildren();cwrap.replaceChildren();
+
+ const vars=pendingVmall.variants||[];
+
+ const tbl=document.createElement("table");tbl.className="mtable";
+
+ const thead=document.createElement("thead");const hr=document.createElement("tr");
+
+ ["选","配置","官网价","基础价（渠道进价，选填）"].forEach(h=>{const th=document.createElement("th");th.textContent=h;hr.append(th)});
+
+ thead.append(hr);tbl.append(thead);
+
+ const tbody=document.createElement("tbody");
+
+ vars.forEach(v=>{
+
+  const tr=document.createElement("tr");
+
+  const td1=document.createElement("td");const cb=document.createElement("input");cb.type="checkbox";cb.checked=v.include!==false;cb.onchange=()=>{v.include=cb.checked;updateVmallSum()};td1.append(cb);
+
+  const td2=document.createElement("td");td2.textContent=v.display_name;
+
+  const td3=document.createElement("td");td3.className="price";td3.textContent="¥"+Number(v.price).toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const td4=document.createElement("td");const bp=document.createElement("input");bp.type="number";bp.min="0";bp.step="0.01";bp.placeholder="选填";bp.value=v.base_price||"";bp.oninput=()=>{v.base_price=bp.value};td4.append(bp);
+
+  tr.append(td1,td2,td3,td4);tbody.append(tr)});
+
+ tbl.append(tbody);grid.append(tbl);
+
+ const sum=document.createElement("div");sum.className="msum";
+
+ const selAll=document.createElement("button");selAll.type="button";selAll.className="secondary";selAll.textContent="全选";selAll.onclick=()=>{vars.forEach(v=>v.include=true);renderVmallMatrix()};
+
+ const selNone=document.createElement("button");selNone.type="button";selNone.className="secondary";selNone.textContent="全不选";selNone.onclick=()=>{vars.forEach(v=>v.include=false);renderVmallMatrix()};
+
+ const span=document.createElement("span");span.id="vmall-matrix-sum";
+
+ sum.append(selAll,selNone,span);grid.append(sum);
+
+ updateVmallSum();
+
  (pendingVmall.colors||[]).forEach((c,i)=>{
   const chip=document.createElement("span");chip.style.cssText="display:inline-flex;align-items:center;gap:4px;background:#f1f5fb;border:1px solid #dfe7f2;border-radius:9px;padding:3px 7px;margin:3px 6px 3px 0;font-size:12px";
   if(c.image){const im=document.createElement("img");im.src=c.image;im.style.cssText="width:26px;height:26px;border-radius:5px;object-fit:cover;border:1px solid #e2e8f2";chip.append(im)}
   chip.append(document.createTextNode(c.name));
   const x=document.createElement("button");x.type="button";x.textContent="×";x.style.cssText="border:none;background:none;color:#dc2626;cursor:pointer;padding:0";
   x.onclick=()=>{pendingVmall.colors.splice(i,1);renderVmallMatrix()};
-  chip.append(x);cwrap.append(chip)});
-}
-function updateVmallSum(){
- const el=$("#vmall-matrix-sum");if(!el||!pendingVmall)return;
- const vars=pendingVmall.variants||[];
- el.textContent="已选 "+vars.filter(v=>v.include!==false).length+" / 共 "+vars.length+" 个配置";
+  chip.append(x);cwrap.append(chip)});
+
+}
+
+function updateVmallSum(){
+
+ const el=$("#vmall-matrix-sum");if(!el||!pendingVmall)return;
+
+ const vars=pendingVmall.variants||[];
+
+ el.textContent="已选 "+vars.filter(v=>v.include!==false).length+" / 共 "+vars.length+" 个配置";
+
 }
 let pendingVmall=null;
 $("#vmall-fetch-form-btn").onclick=async()=>{const u=$("#vmall-fetch-form-url").value.trim()||$("#product-form").querySelector('[name="official_url"]').value.trim();
