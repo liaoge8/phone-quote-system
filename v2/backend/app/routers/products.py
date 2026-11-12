@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import json
 import re
-import urllib.request
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from app.core.time import BUSINESS_TZ
@@ -459,17 +459,21 @@ VMALL_FETCH_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
 def _fetch_vmall_html(url: str) -> str:
     if "vmall.com" not in url:
         raise HTTPException(422, "请粘贴华为商城（vmall.com）的商品链接")
-    req = urllib.request.Request(url, headers={
+    headers = {
         "User-Agent": VMALL_FETCH_UA,
         "Referer": "https://www.vmall.com/",
         "Accept": "text/html,application/xhtml+xml",
-    })
-    try:
-        with urllib.request.urlopen(req, timeout=25) as resp:
-            return resp.read().decode("utf-8", errors="replace")
-    except Exception as exc:
-        raise HTTPException(502, f"华为商城页面抓取失败：{exc}")
-
+    }
+    last_error = None
+    for _attempt in range(3):
+        try:
+            with httpx.Client(headers=headers, timeout=30.0, follow_redirects=True) as client:
+                resp = client.get(url)
+                resp.raise_for_status()
+                return resp.text
+        except Exception as exc:
+            last_error = exc
+    raise HTTPException(502, f"华为商城页面抓取失败（已重试）：{last_error}")
 
 def _parse_vmall_html(html: str) -> dict:
     match = re.search(r'<script id="__NEXT_DATA__" type="application/json"[^>]*>(.*?)</script>', html, re.S)
