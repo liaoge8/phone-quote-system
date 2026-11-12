@@ -254,3 +254,4 @@ def test_create_product_with_official_price(delete_client):
         "brand": "华为", "model": "官网价机型", "official_price": "5999.00"})
     assert created.status_code == 201, created.text
     assert float(created.json()["official_price"]) == 5999.00
+

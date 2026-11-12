@@ -3,6 +3,9 @@ from pathlib import Path
 from datetime import date, datetime
 from decimal import Decimal
 
+import json
+import re
+import urllib.request
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from app.core.time import BUSINESS_TZ
@@ -448,3 +451,83 @@ def delete_product_color(product_id: int, color_id: int, db: Session = Depends(g
     db.delete(color)
     db.commit()
     return {"id": color_id, "deleted": True, "color_name": color.color_name}
+
+VMALL_FETCH_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+
+
+def _fetch_vmall_html(url: str) -> str:
+    if "vmall.com" not in url:
+        raise HTTPException(422, "请粘贴华为商城（vmall.com）的商品链接")
+    req = urllib.request.Request(url, headers={
+        "User-Agent": VMALL_FETCH_UA,
+        "Referer": "https://www.vmall.com/",
+        "Accept": "text/html,application/xhtml+xml",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            return resp.read().decode("utf-8", errors="replace")
+    except Exception as exc:
+        raise HTTPException(502, f"华为商城页面抓取失败：{exc}")
+
+
+def _parse_vmall_html(html: str) -> dict:
+    match = re.search(r'<script id="__NEXT_DATA__" type="application/json"[^>]*>(.*?)</script>', html, re.S)
+    if not match:
+        raise HTTPException(502, "页面中没有找到商品数据（链接可能不是商品详情页）")
+    try:
+        main = json.loads(match.group(1))["props"]["pageProps"]["mainData"]["current"]
+    except Exception as exc:
+        raise HTTPException(502, f"商品数据解析失败：{exc}")
+    name = main.get("name") or main.get("briefName")
+    if not name:
+        raise HTTPException(502, "商品数据里没有商品名称")
+    current_code = main.get("currentSbomCode")
+    sbom_list = main.get("productOptions", {}).get("sbomList") or {}
+    color_by_code, colors = {}, []
+    for item in main.get("colorSelectItem") or []:
+        value = item.get("attrValue")
+        if value and value not in colors:
+            colors.append(value)
+        if item.get("sbomCode") and value:
+            color_by_code[item["sbomCode"]] = value
+    variants = []
+    for code, entry in sbom_list.items():
+        price = entry.get("price")
+        if price is None:
+            continue
+        sbom_name = entry.get("name") or ""
+        version_match = re.search(r"(\d+GB|\d+TB)", sbom_name)
+        version = version_match.group(1) if version_match else ""
+        color = color_by_code.get(code, "")
+        display = (version + " " + color).strip() or sbom_name
+        variants.append({
+            "sbom_code": code,
+            "display_name": display,
+            "price": float(price),
+            "current": code == current_code,
+        })
+    official_price = None
+    if current_code and current_code in sbom_list:
+        official_price = sbom_list[current_code].get("price")
+    description = ""
+    desc_match = re.search(r'<meta name="description" content="([^"]+)"', html)
+    if desc_match:
+        description = desc_match.group(1)[:500]
+    return {
+        "name": name,
+        "brand": main.get("brandName"),
+        "official_price": float(official_price) if official_price is not None else None,
+        "variants": variants,
+        "colors": colors,
+        "description": description,
+    }
+
+
+@router.post("/fetch-vmall")
+def fetch_vmall_product(body: dict, _admin: User = Depends(require_admin)):
+    url = str((body or {}).get("url", "")).strip()
+    html = _fetch_vmall_html(url)
+    parsed = _parse_vmall_html(html)
+    parsed["official_url"] = url
+    return parsed
