@@ -490,14 +490,18 @@ def _parse_vmall_html(html: str) -> dict:
     model = name[len(brand):].strip() if brand and name.startswith(brand) else name
     current_code = main.get("currentSbomCode")
     sbom_list = main.get("productOptions", {}).get("sbomList") or {}
-    color_by_code, colors = {}, []
+    color_by_code, colors, color_seen = {}, [], set()
     for item in main.get("colorSelectItem") or []:
         value = item.get("attrValue")
-        if value and value not in colors:
-            colors.append(value)
+        if not value or value in color_seen:
+            continue
+        color_seen.add(value)
+        colors.append({"name": value, "image": item.get("url") or ""})
         if item.get("sbomCode") and value:
             color_by_code[item["sbomCode"]] = value
     variants = []
+    version_price = {}
+    version_color = {}
     tagline = ""
     selling_points = []
     first_major = None
@@ -515,17 +519,10 @@ def _parse_vmall_html(html: str) -> dict:
         prom = entry.get("sbomPromWord") or ""
         if prom and (not tagline or len(prom) > len(tagline)):
             tagline = prom
-        display = (version + " " + color).strip() or entry.get("name") or code
         price = entry.get("price")
-        if price is not None:
-            variants.append({
-                "sbom_code": code,
-                "display_name": display,
-                "version": version,
-                "color": color,
-                "price": float(price),
-                "current": code == current_code,
-            })
+        if version and version not in version_price and price is not None:
+            version_price[version] = float(price)
+            version_color[version] = color
     for attr in first_major or []:
         attr_name = str(attr.get("attrName") or "").strip()
         attr_value = str(attr.get("attrValue") or "").strip()
@@ -540,6 +537,11 @@ def _parse_vmall_html(html: str) -> dict:
     if desc_match:
         description = desc_match.group(1)[:500]
     intro = ("；".join(selling_points[:6]) + "。") if selling_points else description
+    variants = [
+        {"display_name": version, "version": version, "color_example": version_color.get(version, ""), "price": price}
+        for version, price in version_price.items()
+    ]
+    variants.sort(key=lambda v: v["price"])
     return {
         "name": name,
         "brand": brand,

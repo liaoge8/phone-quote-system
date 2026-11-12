@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class ProductColorCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     color_name: str = Field(min_length=1, max_length=60)
+    image_url: str | None = Field(default=None, max_length=500)
 
     @field_validator("color_name")
     @classmethod
@@ -20,4 +21,5 @@ class ProductColorOut(BaseModel):
     id: int
     product_id: int
     color_name: str
+    image_url: str | None = None
     created_at: datetime

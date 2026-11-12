@@ -342,7 +342,22 @@ const points=$("#detail-selling-points");points.replaceChildren();(p.selling_poi
    api("/products/"+p.id+"/colors")
   ]);
   detailCache={prices,rebates,policies:policies.filter(x=>x.product_id===p.id),registeredVariants,colors};
-  (()=>{const cbox=$("#detail-colors");cbox.replaceChildren();cbox.append(document.createTextNode("厂家颜色："));if(!colors.length){cbox.append(document.createTextNode("暂未登记"))}else{colors.forEach((c,i)=>{if(i)cbox.append(document.createTextNode("、"));const s=document.createElement("span");s.textContent=c.color_name;cbox.append(s);if(me&&me.role==="admin"&&currentProduct){const x=document.createElement("button");x.type="button";x.className="pill-x";x.textContent="×";x.title="删除该颜色";x.onclick=async()=>{if(!confirm("确认删除颜色 "+c.color_name+"？"))return;try{await api("/products/"+currentProduct.id+"/colors/"+c.id,{method:"DELETE"});await openProductDetail(currentProduct);await loadProducts();showMessage("颜色已删除")}catch(e){showMessage(e.message,true)}};cbox.append(x)}})}})();
+  (()=>{const cbox=$("#detail-colors");cbox.replaceChildren();cbox.append(document.createTextNode("厂家颜色："));
+ if(!colors.length){cbox.append(document.createTextNode("暂未登记"))}
+ else{
+  const pv=document.createElement("div");pv.id="color-preview";pv.style.cssText="display:none;margin-top:8px";
+  colors.forEach(c=>{
+   if(c.image_url){const im=document.createElement("img");im.src=c.image_url;im.alt=c.color_name;im.title="点击查看 "+c.color_name;im.style.cssText="width:30px;height:30px;border-radius:5px;object-fit:cover;vertical-align:middle;margin:0 6px 0 0;cursor:pointer;box-shadow:0 0 0 1px #e3e7ee";
+    im.onclick=()=>{if(pv.dataset.name===c.color_name){pv.style.display="none";pv.dataset.name="";return}
+     pv.replaceChildren();const big=document.createElement("img");big.src=c.image_url;big.alt=c.color_name;big.style.cssText="max-width:220px;max-height:220px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);display:block";
+     const cap=document.createElement("div");cap.style.cssText="font-size:12px;color:#6b7280;margin-top:4px";cap.textContent=c.color_name;
+     pv.append(big,cap);pv.style.display="block";pv.dataset.name=c.color_name};cbox.append(im)}
+   const s=document.createElement("span");s.textContent=c.color_name;s.style.cssText="margin-right:8px;vertical-align:middle";cbox.append(s);
+   if(me&&me.role==="admin"&&currentProduct){const x=document.createElement("button");x.type="button";x.className="pill-x";x.textContent="×";x.title="删除该颜色";
+    x.onclick=async()=>{if(!confirm("确认删除颜色 "+c.color_name+"？"))return;
+     try{await api("/products/"+currentProduct.id+"/colors/"+c.id,{method:"DELETE"});await openProductDetail(currentProduct);await loadProducts();showMessage("颜色已删除")}catch(e){showMessage(e.message,true)}};cbox.append(x)}})
+  cbox.append(pv)}
+})();
   const variants=[...new Set(registeredVariants.map(x=>x.display_name))];
   variants.sort((a,b)=>a.localeCompare(b,"zh-CN", {numeric:true}));
   if(!variants.length)variants.push("尚未录入配置");const isAdminDetail=me?.role==="admin";$("#detail-add-variant").classList.toggle("hidden",!isAdminDetail);$("#detail-archive").classList.toggle("hidden",!isAdminDetail);$("#detail-delete").classList.toggle("hidden",!isAdminDetail);
@@ -450,11 +465,12 @@ function renderVmallMatrix(){
  const span=document.createElement("span");span.id="vmall-matrix-sum";
  sum.append(selAll,selNone,span);grid.append(sum);
  updateVmallSum();
- (pendingVmall.colors||[]).forEach((c,i)=>{
-  const chip=document.createElement("span");chip.style.cssText="display:inline-flex;align-items:center;gap:4px;background:#eef2f7;border-radius:6px;padding:3px 8px;margin:3px 6px 3px 0;font-size:12px";
-  chip.append(document.createTextNode(c));
-  const x=document.createElement("button");x.type="button";x.textContent="×";x.style.cssText="border:none;background:none;color:#dc2626;cursor:pointer;padding:0";
-  x.onclick=()=>{pendingVmall.colors.splice(i,1);renderVmallMatrix()};
+ (pendingVmall.colors||[]).forEach((c,i)=>{
+  const chip=document.createElement("span");chip.style.cssText="display:inline-flex;align-items:center;gap:4px;background:#eef2f7;border-radius:6px;padding:3px 6px;margin:3px 6px 3px 0;font-size:12px";
+  if(c.image){const im=document.createElement("img");im.src=c.image;im.style.cssText="width:26px;height:26px;border-radius:4px;object-fit:cover";chip.append(im)}
+  chip.append(document.createTextNode(c.name));
+  const x=document.createElement("button");x.type="button";x.textContent="×";x.style.cssText="border:none;background:none;color:#dc2626;cursor:pointer;padding:0";
+  x.onclick=()=>{pendingVmall.colors.splice(i,1);renderVmallMatrix()};
   chip.append(x);cwrap.append(chip)});
 }
 function updateVmallSum(){
@@ -485,7 +501,7 @@ $("#vmall-fetch-detail-btn").onclick=async()=>{const u=$("#vmall-fetch-url-detai
  try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:d.official_price,official_url:d.official_url,intro:currentProduct.intro?undefined:(d.intro||d.description||null),selling_points:currentProduct.selling_points&&currentProduct.selling_points.length?undefined:(d.selling_points||undefined)})})}catch(e){}
  let ok=0;
  for(const v of d.variants||[]){try{await api("/products/"+currentProduct.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});ok++}catch(e){}}
- for(const c of d.colors||[]){try{await api("/products/"+currentProduct.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c})});ok++}catch(e){}}
+ for(const c of d.colors||[]){try{await api("/products/"+currentProduct.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c.name,image_url:c.image||null})});ok++}catch(e){}}
  await openProductDetail(currentProduct);await loadProducts();showMessage("采集完成：官网价已更新，新增 "+ok+" 项（重复自动跳过）")}
  catch(e){showMessage(e.message,true)}};
 
@@ -493,27 +509,27 @@ $("#vmall-fetch-detail-btn").onclick=async()=>{const u=$("#vmall-fetch-url-detai
 $("#product-edit-form").addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget;try{const resp=await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({brand:f.brand.value.trim(),model:f.model.value.trim(),tagline:f.tagline.value.trim()||null,intro:f.intro.value.trim()||null,selling_points:f.selling_points.value.split(/\n|，|,/).map(x=>x.trim()).filter(Boolean).slice(0,8)})});currentProduct=Object.assign({},currentProduct,resp);$("#product-edit-panel").classList.add("hidden");await openProductDetail(currentProduct);await loadProducts();showMessage("商品资料已更新")}catch(err){showMessage(err.message,true)}});
 $("#product-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{const created=await api("/products",{method:"POST",body:JSON.stringify({brand:f.get("brand"),model:f.get("model"),intro:f.get("intro")||null,tagline:f.get("tagline")||null,official_price:f.get("official_price")?Number(f.get("official_price")):null,official_url:f.get("official_url")?.trim()||null,selling_points:String(f.get("selling_points")||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean)})});
  let added=0;
- if(pendingVmall&&created&&created.id){
- for(const v of pendingVmall.variants||[]){
-  if(v.include===false)continue;
-  try{
-   await api("/products/"+created.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});
-   added++;
-   if(v.base_price&&Number(v.base_price)>0){
-    try{
-     await api("/products/"+created.id+"/prices",{method:"POST",body:JSON.stringify({variant:v.display_name,price_type:"基础价格",price:Number(v.base_price),effective_date:new Date().toLocaleDateString("sv-SE")})});
-    }catch(e){}
-   }
-  }catch(e){}}
- for(const c of pendingVmall.colors||[]){
-  try{
-   await api("/products/"+created.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c})});
-   added++;
-  }catch(e){}}
- pendingVmall=null}
+ if(pendingVmall&&created&&created.id){
+  for(const v of pendingVmall.variants||[]){
+   if(v.include===false)continue;
+   try{
+    await api("/products/"+created.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});
+    added++;
+    if(v.base_price&&Number(v.base_price)>0){
+     try{
+      await api("/products/"+created.id+"/prices",{method:"POST",body:JSON.stringify({variant:v.display_name,price_type:"基础价格",price:Number(v.base_price),effective_date:new Date().toLocaleDateString("sv-SE")})});
+     }catch(e){}
+    }
+   }catch(e){}}
+  for(const c of pendingVmall.colors||[]){
+   try{
+    await api("/products/"+created.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c.name,image_url:c.image||null})});
+    added++;
+   }catch(e){}}
+  pendingVmall=null}
  form.reset();$("#product-form-panel").classList.add("hidden");await loadProducts();
- showMessage(added?("商品已保存，自动添加 "+added+" 项配置/颜色（重复跳过）"):"商品已保存")}catch(err){showMessage(err.message,true)}});
-$("#new-st-btn").onclick=()=>$("#st-form-panel").classList.toggle("hidden");
+ showMessage(added?("商品已保存，自动添加 "+added+" 项配置/颜色（重复跳过）"):"商品已保存")}
+catch(err){showMessage(err.message,true)}});$("#new-st-btn").onclick=()=>$("#st-form-panel").classList.toggle("hidden");
 $("#cancel-st").onclick=()=>$("#st-form-panel").classList.add("hidden");
 $("#st-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{await api("/products/"+currentProduct.id+"/st-rebates",{method:"POST",body:JSON.stringify({variant:f.get("variant"),amount:f.get("amount"),effective_date:f.get("effective_date"),note:f.get("note")||null})});form.reset();$("#st-form-panel").classList.add("hidden");await loadST();showMessage("ST返利记录已保存")}catch(err){showMessage(err.message,true)}});
 $("#new-policy-btn").onclick=()=>$("#policy-form-panel").classList.toggle("hidden");
