@@ -108,6 +108,16 @@ main{padding:0 8px}
 .hidden{display:none!important}
 .pill-x{border:none;background:#fee2e2;color:#dc2626;border-radius:8px;padding:5px 9px;cursor:pointer;font-size:13px;line-height:1.2}
 .pill-x:hover{background:#fecaca}
+.mtable{width:100%;border-collapse:collapse;font-size:13px}
+.mtable th{font-size:12px;color:#6b7280;text-align:left;padding:6px 8px;border-bottom:1px solid #e3e7ee;font-weight:600;white-space:nowrap}
+.mtable td{padding:7px 8px;border-bottom:1px solid #eef0f4;text-align:left;vertical-align:middle}
+.mtable tbody tr:nth-child(even){background:#fafbfd}
+.mtable input[type=checkbox]{transform:scale(1.3);cursor:pointer;vertical-align:middle}
+.mtable input[type=number]{width:130px;padding:5px 7px;border:1px solid #d9dee5;border-radius:6px;font-size:13px}
+.mtable .price{color:#6b7280;white-space:nowrap;font-variant-numeric:tabular-nums}
+.mtable .msum{margin-top:8px;font-size:12px;color:#6b7280;display:flex;gap:6px;align-items:center}
+.mtable .msum button{padding:3px 10px;font-size:12px}
+
 #overview-panel tbody tr{cursor:pointer}
 #overview-panel tbody tr:hover{background:#eef3ff}
 @media(max-width:680px){.product-cards{grid-template-columns:1fr}.product-tools{grid-template-columns:minmax(0,1fr) 112px}.product-card{padding:12px}.detail-title{font-size:19px}.detail-price .amount{font-size:30px}}
@@ -415,24 +425,42 @@ $("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admi
  try{const resp=await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:v?Number(v):null,official_url:$("#official-url-input").value.trim()||null})});
  currentProduct=Object.assign({},currentProduct,resp);await openProductDetail(currentProduct);await loadProducts();showMessage("官网参考价已保存")}catch(e){showMessage(e.message,true)}};
 $("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
-function renderVmallMatrix(){
- const box=$("#vmall-matrix-box"),grid=$("#vmall-matrix"),cwrap=$("#vmall-colors");
- if(!box||!grid||!cwrap)return;
- if(!pendingVmall){box.classList.add("hidden");return}
- box.classList.remove("hidden");grid.replaceChildren();cwrap.replaceChildren();
- (pendingVmall.variants||[]).forEach(v=>{
-  const row=document.createElement("div");row.style.cssText="display:flex;gap:6px;align-items:center;margin-top:6px";
-  const cb=document.createElement("input");cb.type="checkbox";cb.checked=v.include!==false;cb.onchange=()=>{v.include=cb.checked};
-  const nm=document.createElement("span");nm.style.cssText="flex:1.2;font-size:13px";nm.textContent=v.display_name;
-  const op=document.createElement("span");op.style.cssText="flex:.9;font-size:12px;color:#6b7280";op.textContent="官网 ¥"+Number(v.price).toFixed(2);
-  const bp=document.createElement("input");bp.type="number";bp.min="0.01";bp.step="0.01";bp.placeholder="基础价";bp.style.cssText="flex:1";bp.value=v.base_price||"";bp.oninput=()=>{v.base_price=bp.value};
-  row.append(cb,nm,op,bp);grid.append(row)});
- (pendingVmall.colors||[]).forEach((c,i)=>{
-  const chip=document.createElement("span");chip.style.cssText="display:inline-flex;align-items:center;gap:4px;background:#eef2f7;border-radius:6px;padding:3px 8px;margin:3px 6px 3px 0;font-size:12px";
-  chip.append(document.createTextNode(c));
-  const x=document.createElement("button");x.type="button";x.textContent="×";x.style.cssText="border:none;background:none;color:#dc2626;cursor:pointer;padding:0";
-  x.onclick=()=>{pendingVmall.colors.splice(i,1);renderVmallMatrix()};
-  chip.append(x);cwrap.append(chip)});
+function renderVmallMatrix(){
+ const box=$("#vmall-matrix-box"),grid=$("#vmall-matrix"),cwrap=$("#vmall-colors");
+ if(!box||!grid||!cwrap)return;
+ if(!pendingVmall){box.classList.add("hidden");return}
+ box.classList.remove("hidden");grid.replaceChildren();cwrap.replaceChildren();
+ const vars=pendingVmall.variants||[];
+ const tbl=document.createElement("table");tbl.className="mtable";
+ const thead=document.createElement("thead");const hr=document.createElement("tr");
+ ["选","配置","官网价","基础价（渠道进价，选填）"].forEach(h=>{const th=document.createElement("th");th.textContent=h;hr.append(th)});
+ thead.append(hr);tbl.append(thead);
+ const tbody=document.createElement("tbody");
+ vars.forEach(v=>{
+  const tr=document.createElement("tr");
+  const td1=document.createElement("td");const cb=document.createElement("input");cb.type="checkbox";cb.checked=v.include!==false;cb.onchange=()=>{v.include=cb.checked;updateVmallSum()};td1.append(cb);
+  const td2=document.createElement("td");td2.textContent=v.display_name;
+  const td3=document.createElement("td");td3.className="price";td3.textContent="¥"+Number(v.price).toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const td4=document.createElement("td");const bp=document.createElement("input");bp.type="number";bp.min="0";bp.step="0.01";bp.placeholder="选填";bp.value=v.base_price||"";bp.oninput=()=>{v.base_price=bp.value};td4.append(bp);
+  tr.append(td1,td2,td3,td4);tbody.append(tr)});
+ tbl.append(tbody);grid.append(tbl);
+ const sum=document.createElement("div");sum.className="msum";
+ const selAll=document.createElement("button");selAll.type="button";selAll.className="secondary";selAll.textContent="全选";selAll.onclick=()=>{vars.forEach(v=>v.include=true);renderVmallMatrix()};
+ const selNone=document.createElement("button");selNone.type="button";selNone.className="secondary";selNone.textContent="全不选";selNone.onclick=()=>{vars.forEach(v=>v.include=false);renderVmallMatrix()};
+ const span=document.createElement("span");span.id="vmall-matrix-sum";
+ sum.append(selAll,selNone,span);grid.append(sum);
+ updateVmallSum();
+ (pendingVmall.colors||[]).forEach((c,i)=>{
+  const chip=document.createElement("span");chip.style.cssText="display:inline-flex;align-items:center;gap:4px;background:#eef2f7;border-radius:6px;padding:3px 8px;margin:3px 6px 3px 0;font-size:12px";
+  chip.append(document.createTextNode(c));
+  const x=document.createElement("button");x.type="button";x.textContent="×";x.style.cssText="border:none;background:none;color:#dc2626;cursor:pointer;padding:0";
+  x.onclick=()=>{pendingVmall.colors.splice(i,1);renderVmallMatrix()};
+  chip.append(x);cwrap.append(chip)});
+}
+function updateVmallSum(){
+ const el=$("#vmall-matrix-sum");if(!el||!pendingVmall)return;
+ const vars=pendingVmall.variants||[];
+ el.textContent="已选 "+vars.filter(v=>v.include!==false).length+" / 共 "+vars.length+" 个配置";
 }
 let pendingVmall=null;
 $("#vmall-fetch-form-btn").onclick=async()=>{const u=$("#vmall-fetch-form-url").value.trim()||$("#product-form").querySelector('[name="official_url"]').value.trim();
