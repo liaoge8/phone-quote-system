@@ -370,7 +370,15 @@ function renderVariantPills(variants){
  variants.forEach(v=>{const b=document.createElement("button");b.type="button";b.className="variant-pill"+(v===selectedVariant?" active":"");b.textContent=v;b.onclick=()=>chooseVariant(v);box.append(b);if(me&&me.role==="admin"&&currentProduct){const vr=(detailCache.registeredVariants||[]).find(z=>z.display_name===v);if(vr){const x=document.createElement("button");x.type="button";x.className="pill-x";x.textContent="×";x.title="删除该配置";x.onclick=async()=>{if(!confirm("确认删除配置 "+v+"？该配置的价格历史会保留，但不再可选。"))return;try{await api("/products/"+currentProduct.id+"/variants/"+vr.id,{method:"DELETE"});await openProductDetail(currentProduct);await loadProducts();showMessage("配置已删除")}catch(e){showMessage(e.message,true)}};box.append(x)}}});
 }
 function chooseVariant(v){
- selectedVariant=v;$("#detail-variants").querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.textContent===v));
+ selectedVariant=v;
+ (()=>{const vr=(detailCache.registeredVariants||[]).find(z=>z.display_name===v);
+ const vp=vr&&vr.official_price!=null?Number(vr.official_price):null;
+ const ofb=$("#detail-official");if(!ofb)return;
+ ofb.replaceChildren();ofb.append(document.createTextNode("官网参考价："));
+ if(vp!=null){ofb.append(document.createTextNode("¥"+vp.toFixed(2)));ofb.append(document.createTextNode("（"+v+"）"))}
+ else if(currentProduct&&currentProduct.official_price!=null){ofb.append(document.createTextNode("¥"+Number(currentProduct.official_price).toFixed(2)+"（全配置通用）"))}
+ else{ofb.append(document.createTextNode("暂未录入"))}})();
+$("#detail-variants").querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.textContent===v));
  const prices=detailCache.prices||[],rebates=detailCache.rebates||[],policies=detailCache.policies||[];
  const bases=prices.filter(x=>x.variant===v&&x.price_type==="基础价格"&&!x.voided_at).sort((a,b)=>b.effective_date.localeCompare(a.effective_date)||b.id-a.id);
  const mKey=currentMonthKey();const sts=rebates.filter(x=>x.variant===v&&!x.voided_at&&x.effective_date.slice(0,7)===mKey).sort((a,b)=>b.effective_date.localeCompare(a.effective_date)||b.id-a.id);
@@ -434,11 +442,17 @@ $("#capture-overview-btn").onclick=()=>{document.body.classList.add("print-overv
 $("#new-product-btn").onclick=()=>$("#product-form-panel").classList.toggle("hidden");
 $("#cancel-product").onclick=()=>$("#product-form-panel").classList.add("hidden");$("#detail-archive").onclick=async()=>{const reason=prompt("请输入停用原因（至少5个字）");if(reason===null)return;if(reason.trim().length<5){alert("停用原因至少5个字");return}if(!confirm("确认停用 "+currentProduct.brand+" "+currentProduct.model+"？价格历史将保留，可随时在「已归档商品」中恢复。"))return;try{await api("/products/"+currentProduct.id+"/archive",{method:"PATCH",body:JSON.stringify({reason:reason.trim()})});showMessage("商品已停用");$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden");await loadProducts()}catch(e){showMessage(e.message,true)}};$("#detail-delete").onclick=async()=>{if(!confirm("确认彻底删除 "+currentProduct.brand+" "+currentProduct.model+"？其全部价格历史、ST返利、政策记录与截图将一并删除，不可恢复！"))return;if(!confirm("再次确认：删除操作不可恢复，是否继续？"))return;try{await api("/products/"+currentProduct.id,{method:"DELETE"});showMessage("商品已删除");$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden");await loadProducts()}catch(e){showMessage(e.message,true)}};$("#detail-edit-info").onclick=()=>{if(!currentProduct||me?.role!=="admin")return;const f=$("#product-edit-form");f.brand.value=currentProduct.brand||"";f.model.value=currentProduct.model||"";f.tagline.value=currentProduct.tagline||"";f.intro.value=currentProduct.intro||"";f.selling_points.value=(currentProduct.selling_points||[]).join("\n");$("#product-edit-panel").classList.remove("hidden");$("#product-edit-panel").scrollIntoView({behavior:"smooth",block:"start"})};
 $("#cancel-product-edit").onclick=()=>$("#product-edit-panel").classList.add("hidden");
-$("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admin")return;
- const v=$("#official-price-input").value.trim();
- if(v&&!/^\d+(\.\d{1,2})?$/.test(v)){showMessage("官网价格式不正确（最多两位小数）",true);return}
- try{const resp=await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:v?Number(v):null,official_url:$("#official-url-input").value.trim()||null})});
- currentProduct=Object.assign({},currentProduct,resp);await openProductDetail(currentProduct);await loadProducts();showMessage("官网参考价已保存")}catch(e){showMessage(e.message,true)}};
+$("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admin")return;
+ const v=$("#official-price-input").value.trim();
+ if(v&&!/^\d+(\.\d{1,2})?$/.test(v)){showMessage("官网价格式不正确（最多两位小数）",true);return}
+ const url=$("#official-url-input").value.trim()||null;
+ const vr=(detailCache.registeredVariants||[]).find(z=>z.display_name===selectedVariant);
+ if(!vr){showMessage("请先选择一个有效配置",true);return}
+ try{const resp=await api("/products/"+currentProduct.id+"/variants/"+vr.id+"/official-price",{method:"PATCH",body:JSON.stringify({official_price:v?Number(v):null})});
+  vr.official_price=resp.official_price;
+  try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_url:url})})}catch(e){}
+  await openProductDetail(currentProduct);showMessage("官网参考价已保存（"+selectedVariant+"）")}
+ catch(e){showMessage(e.message,true)}};
 $("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
 function renderVmallMatrix(){
  const box=$("#vmall-matrix-box"),grid=$("#vmall-matrix"),cwrap=$("#vmall-colors");
@@ -498,7 +512,8 @@ catch(e){showMessage(e.message,true)}};
 $("#vmall-fetch-detail-btn").onclick=async()=>{const u=$("#vmall-fetch-url-detail").value.trim()||currentProduct.official_url||"";if(!u){showMessage("请先粘贴华为商城商品链接",true);return}if(!currentProduct)return;
  try{const d=await api("/products/fetch-vmall",{method:"POST",body:JSON.stringify({url:u})});
  if(!confirm("采集到："+(d.name||"?")+"，官网价 ¥"+(d.official_price??"—")+"，"+(d.variants||[]).length+" 个配置、"+(d.colors||[]).length+" 个颜色。确认应用到当前商品？"))return;
- try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:d.official_price,official_url:d.official_url,intro:currentProduct.intro?undefined:(d.intro||d.description||null),selling_points:currentProduct.selling_points&&currentProduct.selling_points.length?undefined:(d.selling_points||undefined)})})}catch(e){}
+ try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_url:d.official_url,intro:currentProduct.intro?undefined:(d.intro||d.description||null),selling_points:currentProduct.selling_points&&currentProduct.selling_points.length?undefined:(d.selling_points||undefined)})})}catch(e){}
+ for(const fv of d.variants||[]){const vr=(detailCache.registeredVariants||[]).find(z=>z.display_name===fv.version); if(vr){try{await api("/products/"+currentProduct.id+"/variants/"+vr.id+"/official-price",{method:"PATCH",body:JSON.stringify({official_price:fv.price})})}catch(e){}}}
  let ok=0;
  for(const v of d.variants||[]){try{await api("/products/"+currentProduct.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});ok++}catch(e){}}
  for(const c of d.colors||[]){try{await api("/products/"+currentProduct.id+"/colors",{method:"POST",body:JSON.stringify({color_name:c.name,image_url:c.image||null})});ok++}catch(e){}}
@@ -513,7 +528,7 @@ $("#product-form").addEventListener("submit",async e=>{e.preventDefault();const 
   for(const v of pendingVmall.variants||[]){
    if(v.include===false)continue;
    try{
-    await api("/products/"+created.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name})});
+    await api("/products/"+created.id+"/variants",{method:"POST",body:JSON.stringify({display_name:v.display_name,official_price:v.price||null})});
     added++;
     if(v.base_price&&Number(v.base_price)>0){
      try{

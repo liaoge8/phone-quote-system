@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -8,6 +9,7 @@ class ProductVariantCreate(BaseModel):
     display_name: str = Field(min_length=1, max_length=100)
     ram: str | None = Field(default=None, max_length=20)
     storage: str | None = Field(default=None, max_length=20)
+    official_price: Decimal | None = Field(default=None, gt=0)
 
     @field_validator("display_name")
     @classmethod
@@ -26,5 +28,6 @@ class ProductVariantOut(BaseModel):
     display_name: str
     ram: str | None
     storage: str | None
+    official_price: Decimal | None = None
     is_active: bool
     created_at: datetime
