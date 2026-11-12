@@ -256,7 +256,7 @@ const api=async(path,opts={})=>{
  if(!res.ok){if(res.status===401){logout(false)}throw new Error(data.detail||("请求失败："+res.status))}
  return data;
 };
-function showMessage(msg,error=false){const el=$("#message");el.textContent=msg;el.classList.remove("hidden","error");if(error)el.classList.add("error")}
+function showMessage(msg,error=false){const el=$("#message");el.textContent=msg;el.classList.remove("hidden","error");if(error)el.classList.add("error");clearTimeout(showMessage._t);showMessage._t=setTimeout(()=>{el.classList.add("hidden")},error?6000:3000)}
 function logout(callApi=true){token="";me=null;currentProduct=null;localStorage.removeItem("quote_token");$("#app").classList.add("hidden");$("#userline").classList.add("hidden");$("#login").classList.remove("hidden");$("#main-nav").classList.add("hidden");history.replaceState(null,"","#products");$("#price-panel").classList.add("hidden");$("#policy-panel").classList.add("hidden");$("#st-panel").classList.add("hidden");$("#admin-panel").classList.add("hidden");$("#audit-panel").classList.add("hidden");if(callApi)$("#password").value=""}
 function route(){const h=location.hash.slice(1);if(h==="overview"){$("#overview-panel").classList.remove("hidden");loadOverview().catch(()=>{});$("#overview-panel").scrollIntoView({block:"start"})}else if(h.startsWith("product-")){const id=Number(h.slice(8));const p=(productRows||[]).find(x=>x.id===id);if(p)openProductDetail(p)}else if(h==="admin"){if(me&&me.role==="admin")$("#admin-panel").scrollIntoView({block:"start"})}else{window.scrollTo(0,0)}}
 window.addEventListener("hashchange",()=>{if(me)route()});
@@ -414,9 +414,9 @@ $("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admi
  if(v&&!/^\d+(\.\d{1,2})?$/.test(v)){showMessage("官网价格式不正确（最多两位小数）",true);return}
  try{const resp=await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:v?Number(v):null,official_url:$("#official-url-input").value.trim()||null})});
  currentProduct=Object.assign({},currentProduct,resp);await openProductDetail(currentProduct);await loadProducts();showMessage("官网参考价已保存")}catch(e){showMessage(e.message,true)}};
-$("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();if(!m){showMessage("先填写型号再搜索",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
+$("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
 let pendingVmall=null;
-$("#vmall-fetch-form-btn").onclick=async()=>{const u=$("#vmall-fetch-form-url").value.trim();if(!u)return;
+$("#vmall-fetch-form-btn").onclick=async()=>{const u=$("#vmall-fetch-form-url").value.trim()||$("#product-form").querySelector('[name="official_url"]').value.trim();if(!u){showMessage("请先粘贴华为商城商品链接",true);return}
  try{const d=await api("/products/fetch-vmall",{method:"POST",body:JSON.stringify({url:u})});
  const f=$("#product-form");
  f.tagline.value=d.name||"";f.intro.value=d.description||"";
@@ -426,7 +426,7 @@ $("#vmall-fetch-form-btn").onclick=async()=>{const u=$("#vmall-fetch-form-url").
  showMessage("已采集："+(d.name||"")+"，官网价 ¥"+(d.official_price??"—")+"，"+pendingVmall.variants.length+" 个配置、"+pendingVmall.colors.length+" 个颜色；保存商品后自动添加")}
  catch(e){showMessage(e.message,true)}};
 
-$("#vmall-fetch-detail-btn").onclick=async()=>{const u=$("#vmall-fetch-url-detail").value.trim();if(!u||!currentProduct)return;
+$("#vmall-fetch-detail-btn").onclick=async()=>{const u=$("#vmall-fetch-url-detail").value.trim()||currentProduct.official_url||"";if(!u){showMessage("请先粘贴华为商城商品链接",true);return}if(!currentProduct)return;
  try{const d=await api("/products/fetch-vmall",{method:"POST",body:JSON.stringify({url:u})});
  if(!confirm("采集到："+(d.name||"?")+"，官网价 ¥"+(d.official_price??"—")+"，"+(d.variants||[]).length+" 个配置、"+(d.colors||[]).length+" 个颜色。确认应用到当前商品？"))return;
  try{await api("/products/"+currentProduct.id,{method:"PATCH",body:JSON.stringify({official_price:d.official_price,official_url:d.official_url,intro:currentProduct.intro?undefined:(d.description||null)})})}catch(e){}
