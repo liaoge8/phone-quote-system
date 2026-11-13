@@ -323,6 +323,7 @@ body.shot-mode .shot-exit{display:block}
 <div id="audit-panel" class="panel hidden"><h2>最近审计记录</h2><div class="tablewrap"><table><thead><tr><th>时间</th><th>操作</th><th>对象</th><th>详情</th></tr></thead><tbody id="audit-logs"></tbody></table></div></div>
 </section>
 </main>
+<button class="shot-exit" id="shot-exit" type="button">退出截图模式</button>
 <script>
 (()=> {
 const $=s=>document.querySelector(s);
@@ -718,5 +719,5 @@ $("#price-form").addEventListener("submit",async e=>{e.preventDefault();const fo
 if(token){enter().catch(e=>{$("#login").classList.remove("hidden");$("#app").classList.add("hidden");showMessage("加载失败："+(e&&e.message||"未知错误")+"，请刷新重试",true)})}else{$("#login").classList.remove("hidden")}
 })();
 </script>
-<button class="shot-exit" id="shot-exit" type="button">退出截图模式</button>
+
 </body></html>
