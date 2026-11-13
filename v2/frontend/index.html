@@ -205,12 +205,21 @@ main{padding:0 9px}
 #overview-panel th,#overview-panel td{padding:6px 1px}
 #app>.toolbar .actions button{font-size:12px;padding:9px 7px}
 }
+.shot-exit{display:none;position:fixed;right:14px;bottom:20px;z-index:99;padding:11px 18px;border-radius:26px;border:none;background:rgba(139,92,246,.94);color:#fff;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 10px 28px rgba(13,31,60,.4)}
+body.shot-mode header{display:none!important}
+body.shot-mode .actions{display:none!important}
+body.shot-mode .product-tools{display:none!important}
+body.shot-mode #price-form-panel,body.shot-mode #st-form-panel,body.shot-mode #policy-form-panel,body.shot-mode #product-form-panel,body.shot-mode #product-edit-panel{display:none!important}
+body.shot-mode #admin-panel,body.shot-mode #backup-panel,body.shot-mode #archived-panel{display:none!important}
+body.shot-mode #back-products,body.shot-mode #official-edit-row,body.shot-mode #vmall-fetch-detail-row,body.shot-mode #inline-variant-row,body.shot-mode #inline-color-row,body.shot-mode .pill-x{display:none!important}
+body.shot-mode .history-row button{display:none!important}
+body.shot-mode .shot-exit{display:block}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
 </style>
 </head>
 <body>
-<header><strong>手机报价档案系统</strong><nav id="main-nav" class="hidden" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="secondary" data-nav="products" type="button">商品档案</button><button class="secondary" data-nav="overview" type="button">价格总览</button><button class="secondary" id="nav-admin" data-nav="admin" type="button">成员管理</button></nav><div class="actions"><button class="secondary" id="nav-intel" type="button">新机情报</button><button class="secondary" id="language-toggle" type="button">中文 / English</button><div id="userline" class="userline hidden"><span id="identity"></span><button class="secondary" id="logout">退出登录</button></div></div></header>
+<header><strong>手机报价档案系统</strong><nav id="main-nav" class="hidden" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="secondary" data-nav="products" type="button">商品档案</button><button class="secondary" data-nav="overview" type="button">价格总览</button><button class="secondary" id="nav-admin" data-nav="admin" type="button">成员管理</button></nav><div class="actions"><button class="secondary" id="nav-intel" type="button">新机情报</button><button class="secondary" id="language-toggle" type="button">中文 / English</button><div id="userline" class="userline hidden"><span id="identity"></span><button class="secondary" id="shot-mode-btn" type="button">截图模式</button><button class="secondary" id="logout">退出登录</button></div></div></header>
 <main>
 <section id="login" class="hidden">
 <div class="login-hero">
@@ -366,7 +375,7 @@ const api=async(path,opts={})=>{
  return data;
 };
 function showMessage(msg,error=false){const el=$("#message");el.textContent=msg;el.classList.remove("hidden","error");if(error)el.classList.add("error");clearTimeout(showMessage._t);showMessage._t=setTimeout(()=>{el.classList.add("hidden")},error?6000:3000)}
-function logout(callApi=true){token="";me=null;currentProduct=null;localStorage.removeItem("quote_token");$("#app").classList.add("hidden");$("#userline").classList.add("hidden");$("#login").classList.remove("hidden");$("#main-nav").classList.add("hidden");location.hash="#products";$("#price-panel").classList.add("hidden");$("#policy-panel").classList.add("hidden");$("#st-panel").classList.add("hidden");$("#admin-panel").classList.add("hidden");$("#audit-panel").classList.add("hidden");if(callApi)$("#password").value=""}
+function logout(callApi=true){document.body.classList.remove("shot-mode");token="";me=null;currentProduct=null;localStorage.removeItem("quote_token");$("#app").classList.add("hidden");$("#userline").classList.add("hidden");$("#login").classList.remove("hidden");$("#main-nav").classList.add("hidden");location.hash="#products";$("#price-panel").classList.add("hidden");$("#policy-panel").classList.add("hidden");$("#st-panel").classList.add("hidden");$("#admin-panel").classList.add("hidden");$("#audit-panel").classList.add("hidden");if(callApi)$("#password").value=""}
 function route(){const h=location.hash.slice(1);if(h==="overview"){$("#overview-panel").classList.remove("hidden");loadOverview().catch(()=>{});$("#overview-panel").scrollIntoView({block:"start"})}else if(h.startsWith("product-")){const id=Number(h.slice(8));const p=(productRows||[]).find(x=>x.id===id);if(p)openProductDetail(p)}else if(h==="admin"){if(me&&me.role==="admin")$("#admin-panel").scrollIntoView({block:"start"})}else{window.scrollTo(0,0)}}
 window.addEventListener("hashchange",()=>{if(me)route()});
 $("#main-nav").addEventListener("click",e=>{const b=e.target.closest("button[data-nav]");if(!b)return;const nav=b.dataset.nav;if(nav==="products"){if(!$("#overview-panel").classList.contains("hidden"))$("#overview-panel").classList.add("hidden");$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden");location.hash="#products";window.scrollTo({top:0,behavior:"smooth"})}else if(nav==="overview"){$("#open-overview-btn").click()}else if(nav==="admin"){const t=$("#admin-panel");t.classList.remove("hidden");t.scrollIntoView({behavior:"smooth",block:"start"});location.hash="#admin"}});
@@ -568,6 +577,8 @@ $("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admi
  catch(e){showMessage(e.message,true)}};
 $("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
 $("#nav-intel").onclick=()=>{window.open("https://j.yyzs.de/intel/","_blank")};
+$("#shot-mode-btn").onclick=()=>{document.body.classList.add("shot-mode");window.scrollTo(0,0)};
+$("#shot-exit").onclick=()=>document.body.classList.remove("shot-mode");
 
 function renderVmallMatrix(){
 
@@ -707,4 +718,5 @@ $("#price-form").addEventListener("submit",async e=>{e.preventDefault();const fo
 if(token){enter().catch(e=>{$("#login").classList.remove("hidden");$("#app").classList.add("hidden");showMessage("加载失败："+(e&&e.message||"未知错误")+"，请刷新重试",true)})}else{$("#login").classList.remove("hidden")}
 })();
 </script>
+<button class="shot-exit" id="shot-exit" type="button">退出截图模式</button>
 </body></html>
