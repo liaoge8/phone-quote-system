@@ -531,11 +531,11 @@ $("#detail-variants").querySelectorAll("button").forEach(b=>b.classList.toggle("
  $("#detail-rebate").textContent=st?money(st.amount):"—";
  const note=$("#detail-policy-note");note.textContent=pol?("政策解读："+pol.interpretation+(pol.note?"；"+pol.note:"")):"当前月份暂无该配置政策记录";note.classList.toggle("hidden",!pol);
  const hist=$("#detail-history-rows");hist.replaceChildren();
- const history=[
-  ...prices.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:x.price_type,amount:x.price,voided:x.voided_at,kind:"price",id:x.id})),
-  ...rebates.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:"ST返利",amount:x.amount,voided:x.voided_at,kind:"st",id:x.id})),
-  ...policies.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:"政策返利",amount:x.policy_price,voided:x.voided_at,kind:"policy",id:x.id}))
- ].sort((a,b)=>b.date.localeCompare(a.date));
+  const history=[
+   ...prices.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:x.price_type,amount:x.price,voided:x.voided_at,kind:"price",id:x.id,note:x.note})),
+   ...rebates.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:"ST返利",amount:x.amount,voided:x.voided_at,kind:"st",id:x.id,note:x.note})),
+   ...policies.filter(x=>x.variant===v).map(x=>({date:x.effective_date,type:"政策返利",amount:x.policy_price,voided:x.voided_at,kind:"policy",id:x.id,note:x.note}))
+  ].sort((a,b)=>b.date.localeCompare(a.date));
  if(!history.length){const empty=document.createElement("div");empty.className="muted";empty.style.padding="12px 0";empty.textContent="该配置暂无价格历史记录";hist.append(empty)}
  history.forEach(r=>{const row=document.createElement("div");row.className="history-row";const d=document.createElement("span");d.textContent=r.date;const t=document.createElement("span");t.textContent=r.type+(r.voided?" · 已作废":"");const a=document.createElement("strong");a.textContent=money(r.amount);row.append(d,t,a);if(r.note){const n=document.createElement("span");n.className="muted";n.style.gridColumn="1/-1";n.style.lineHeight="1.5";n.textContent="备注："+r.note;row.append(n)}if(me?.role==="admin"){const ops=document.createElement("span");if(!r.voided){const vb=document.createElement("button");vb.type="button";vb.className="secondary";vb.textContent="作废";vb.onclick=async()=>{const reason=prompt("请输入作废原因（至少5个字）");if(reason===null)return;if(reason.trim().length<5){alert("作废原因至少5个字");return}try{if(r.kind==="policy"){await api("/policies/"+r.id+"/void",{method:"PATCH",body:JSON.stringify({reason:reason.trim()})})}else{await api((r.kind==="price"?"/prices/":"/st-rebates/")+r.id+"/void?reason="+encodeURIComponent(reason.trim()),{method:"PATCH"})}await openProductDetail(currentProduct)}catch(e){showMessage(e.message,true)}};ops.append(vb)}const delB=document.createElement("button");delB.type="button";delB.className="danger";delB.style.marginLeft="6px";delB.textContent="删除";delB.onclick=async()=>{if(!confirm("确认彻底删除该条记录？不可恢复！"))return;try{await api((r.kind==="price"?"/prices/":r.kind==="st"?"/st-rebates/":"/policies/")+r.id,{method:"DELETE"});await openProductDetail(currentProduct);showMessage("记录已删除")}catch(e){showMessage(e.message,true)}};ops.append(delB);row.append(ops)}hist.append(row)});
 }
