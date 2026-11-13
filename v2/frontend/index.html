@@ -385,6 +385,18 @@ function route(){const h=location.hash.slice(1);if(h==="overview"){$("#overview-
 window.addEventListener("hashchange",()=>{if(me)route()});
 $("#main-nav").addEventListener("click",e=>{const b=e.target.closest("button[data-nav]");if(!b)return;const nav=b.dataset.nav;if(nav==="products"){if(!$("#overview-panel").classList.contains("hidden"))$("#overview-panel").classList.add("hidden");$("#product-detail").classList.add("hidden");$("#products").parentElement.classList.remove("hidden");location.hash="#products";window.scrollTo({top:0,behavior:"smooth"})}else if(nav==="overview"){$("#open-overview-btn").click()}else if(nav==="admin"){const t=$("#admin-panel");t.classList.remove("hidden");t.scrollIntoView({behavior:"smooth",block:"start"});location.hash="#admin"}});
 document.addEventListener("wheel",e=>{const t=e.target;if(t&&t.type==="number"&&document.activeElement===t)e.preventDefault()},{passive:false});
+function refreshCurrentView(){
+ if(!me||document.hidden)return;
+ if(["price-form-panel","st-form-panel","policy-form-panel"].some(id=>!$("#"+id).classList.contains("hidden")))return;
+ if(document.activeElement&&["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName))return;
+ loadProducts().catch(()=>{});
+ const h=location.hash.slice(1);
+ if(h.startsWith("product-")){const p=(productRows||[]).find(x=>x.id===Number(h.slice(8)));if(p)openProductDetail(p).catch(()=>{})}
+ else if(h==="overview"){loadOverview().catch(()=>{})}
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshCurrentView()});
+window.addEventListener("pageshow",e=>{if(e.persisted)refreshCurrentView()});
+setInterval(()=>{if(!document.hidden)refreshCurrentView()},300000);
 async function enter(){me=await api("/auth/me");$("#archived-products-btn").classList.toggle("hidden",me.role!=="admin");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");$("#userline").classList.remove("hidden");$("#identity").textContent=me.username;await loadProducts();if(me.role==="admin"){await loadAdmin();await loadBackups()}$("#main-nav").classList.remove("hidden");$("#nav-admin").classList.toggle("hidden",me.role!=="admin");route()}
 async function loadAdmin(){if(me.role!=="admin")return;$("#admin-panel").classList.remove("hidden");$("#backup-panel").classList.remove("hidden");$("#audit-panel").classList.remove("hidden");
  const users=await api("/auth/users"),body=$("#members");body.replaceChildren();
