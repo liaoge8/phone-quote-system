@@ -233,7 +233,7 @@ def create_product_variant(
     product_id: int,
     body: ProductVariantCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    user: User = Depends(get_current_user),
 ):
     product = db.get(Product, product_id)
     if not product or product.archived_at or product.status != "on_sale":
@@ -246,7 +246,7 @@ def create_product_variant(
         if body.official_price is not None and body.official_price != existing.official_price:
             existing.official_price = body.official_price
             db.add(AuditLog(
-                actor_id=admin.id,
+                actor_id=user.id,
                 action="product_variant.official_price_updated",
                 target_type="product_variant",
                 target_id=str(existing.id),
@@ -262,7 +262,7 @@ def create_product_variant(
         existing.storage = body.storage
         variant = existing
         db.add(AuditLog(
-            actor_id=admin.id,
+            actor_id=user.id,
             action="product_variant.restored",
             target_type="product_variant",
             target_id=str(variant.id),
@@ -273,7 +273,7 @@ def create_product_variant(
         db.add(variant)
         db.flush()
         db.add(AuditLog(
-            actor_id=admin.id,
+            actor_id=user.id,
             action="product_variant.created",
             target_type="product_variant",
             target_id=str(variant.id),
@@ -302,7 +302,7 @@ def create_product_color(
     product_id: int,
     body: ProductColorCreate,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    user: User = Depends(get_current_user),
 ):
     product = db.get(Product, product_id)
     if not product or product.archived_at or product.status != "on_sale":
@@ -315,7 +315,7 @@ def create_product_color(
         if body.image_url and body.image_url != (existing.image_url or ""):
             existing.image_url = body.image_url
             db.add(AuditLog(
-                actor_id=admin.id,
+                actor_id=user.id,
                 action="product_color.image_updated",
                 target_type="product_color",
                 target_id=str(existing.id),
@@ -329,7 +329,7 @@ def create_product_color(
     db.add(color)
     db.flush()
     db.add(AuditLog(
-        actor_id=admin.id,
+        actor_id=user.id,
         action="product_color.created",
         target_type="product_color",
         target_id=str(color.id),
