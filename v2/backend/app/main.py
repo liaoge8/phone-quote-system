@@ -1,4 +1,5 @@
 from pathlib import Path
+import hashlib
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,3 +41,12 @@ def frontend():
 @app.get("/api/health", tags=["系统"])
 def health():
     return {"status": "ok"}
+
+@app.get("/api/version", tags=["系统"])
+def app_version():
+    index_file = Path(__file__).resolve().parents[2] / "frontend" / "index.html"
+    try:
+        digest = hashlib.md5(index_file.read_bytes()).hexdigest()
+    except OSError:
+        digest = "unknown"
+    return {"html_md5": digest}

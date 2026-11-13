@@ -397,6 +397,21 @@ function refreshCurrentView(){
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshCurrentView()});
 window.addEventListener("pageshow",e=>{if(e.persisted)refreshCurrentView()});
 setInterval(()=>{if(!document.hidden)refreshCurrentView()},300000);
+let serverVersion=null;
+async function checkVersion(){
+ try{
+  const r=await fetch("/api/version");
+  if(!r.ok)return;
+  const d=await r.json();
+  if(serverVersion===null){serverVersion=d.html_md5;return}
+  if(serverVersion!==d.html_md5){
+   if(["price-form-panel","st-form-panel","policy-form-panel"].every(id=>$("#"+id).classList.contains("hidden")))location.reload()
+  }
+ }catch(e){}
+}
+setInterval(checkVersion,60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkVersion()});
+checkVersion();
 async function enter(){me=await api("/auth/me");$("#archived-products-btn").classList.toggle("hidden",me.role!=="admin");$("#login").classList.add("hidden");$("#app").classList.remove("hidden");$("#userline").classList.remove("hidden");$("#identity").textContent=me.username;await loadProducts();if(me.role==="admin"){await loadAdmin();await loadBackups()}$("#main-nav").classList.remove("hidden");$("#nav-admin").classList.toggle("hidden",me.role!=="admin");route()}
 async function loadAdmin(){if(me.role!=="admin")return;$("#admin-panel").classList.remove("hidden");$("#backup-panel").classList.remove("hidden");$("#audit-panel").classList.remove("hidden");
  const users=await api("/auth/users"),body=$("#members");body.replaceChildren();
