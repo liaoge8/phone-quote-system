@@ -210,7 +210,7 @@ main{padding:0 9px}
 </style>
 </head>
 <body>
-<header><strong>手机报价档案系统</strong><nav id="main-nav" class="hidden" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="secondary" data-nav="products" type="button">商品档案</button><button class="secondary" data-nav="overview" type="button">价格总览</button><button class="secondary" id="nav-admin" data-nav="admin" type="button">成员管理</button></nav><div class="actions"><button class="secondary" id="nav-intel" type="button">新机情报</button><button class="secondary" id="nav-checkup" type="button">情报中心</button><button class="secondary" id="language-toggle" type="button">中文 / English</button><div id="userline" class="userline hidden"><span id="identity"></span><button class="secondary" id="logout">退出登录</button></div></div></header>
+<header><strong>手机报价档案系统</strong><nav id="main-nav" class="hidden" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="secondary" data-nav="products" type="button">商品档案</button><button class="secondary" data-nav="overview" type="button">价格总览</button><button class="secondary" id="nav-admin" data-nav="admin" type="button">成员管理</button></nav><div class="actions"><button class="secondary" id="nav-checkup" type="button">情报中心</button><button class="secondary" id="language-toggle" type="button">中文 / English</button><div id="userline" class="userline hidden"><span id="identity"></span><button class="secondary" id="logout">退出登录</button></div></div></header>
 <main>
 <section id="login" class="hidden">
 <div class="login-hero">
@@ -263,26 +263,13 @@ main{padding:0 9px}
 </form></div>
 <div class="detail-history"><strong style="font-size:14px">价格历史</strong><div id="detail-history-rows"></div></div>
 <div class="actions" style="margin-top:12px"><button id="detail-edit-info" class="secondary hidden" type="button">编辑资料</button><button id="detail-add-variant" class="secondary hidden" type="button">新增配置</button><button id="detail-add-color" class="secondary hidden" type="button">新增颜色</button><button id="detail-add-price" type="button">新增基础价格</button><button class="secondary" id="detail-add-rebate" type="button">新增ST返利</button><button class="secondary" id="detail-add-policy" type="button">新增政策返利</button><button id="detail-archive" class="secondary hidden" type="button">停用（已停产）</button><button id="detail-delete" class="danger hidden" type="button">删除商品</button></div>
-</div>
-<div class="detail-col-side">
-<div class="detail-price"><div class="label">当前到手价</div><div id="detail-policy-price" class="amount">暂无报价</div></div>
-<div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div>
-<div id="detail-official" class="official-reference"></div><div id="official-edit-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="official-price-input" type="number" min="0.01" step="0.01" placeholder="官网参考价（元）" style="flex:1"><input id="official-url-input" placeholder="官网链接（选填）" style="flex:1.4"><button id="official-price-save" type="button">保存</button></div>
-<div id="vmall-fetch-detail-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="vmall-fetch-url-detail" placeholder="粘贴华为商城商品链接，采集配置/颜色/官网价" style="flex:2.4"><button id="vmall-fetch-detail-btn" type="button">采集</button></div>
-</div>
-</div>
-<div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div><button id="new-price-btn">新增价格</button></div><div class="grid" style="margin:12px 0"><div class="field"><label>开始日期</label><input id="price-start" type="date"></div><div class="field"><label>结束日期</label><input id="price-end" type="date"></div><div class="field"><label>按月查询</label><input id="price-month" type="month"></div><div class="field"><label>按年查询</label><input id="price-year" type="number" min="2000" max="2100" placeholder="例如 2026"></div><div class="field"><label>指定日期（查询当日及之前记录）</label><input id="price-asof" type="date"></div><div class="field" style="justify-content:end"><button id="filter-prices-btn" class="secondary">筛选历史</button><button id="clear-price-filter-btn" class="secondary">清除筛选</button></div></div>
 <div id="price-form-panel" class="hidden"><form id="price-form" class="field"><div class="grid">
 <div class="field"><label>版本 / 配置</label><select name="variant" required><option value="">请先选择商品配置</option></select></div>
 <div class="field"><label>价格类型</label><select name="price_type" required><option value="基础价格">基础价格（当前基础价）</option><option value="purchase">其他价格记录</option></select><div class="muted">基础价格调价时仍选择“基础价格”，填写新金额和生效日期，系统保留旧记录；备注写明“基础价格调整”。</div></div>
 <div class="field"><label>价格（元）</label><input name="price" type="number" min="0.01" step="0.01" required></div>
 <div class="field"><label>生效日期</label><input name="effective_date" type="date" required></div>
 </div><div class="field"><label>备注（选填）</label><textarea name="note"></textarea></div><div class="actions"><button type="submit">保存价格记录</button><button type="button" class="secondary" id="cancel-price">取消</button></div></form></div>
-<div class="tablewrap"><table><thead><tr><th>生效日期</th><th>版本 / 配置</th><th>价格类型</th><th>价格</th><th>录入人</th><th>录入时间</th><th>状态 / 操作</th></tr></thead><tbody id="prices"></tbody></table></div><div id="empty-prices" class="empty hidden">该商品暂无价格记录。</div></div>
-<div id="st-panel" class="panel hidden"><div class="toolbar"><div><h2 id="st-title">ST返利档案</h2><div class="muted">仅有ST返利的机型需要录入；调整时新增记录，保留历史</div></div><button id="new-st-btn">新增ST返利</button></div><div id="st-form-panel" class="hidden"><form id="st-form" class="field"><div class="grid"><div class="field"><label>版本 / 配置</label><select name="variant" required><option value="">请先选择商品配置</option></select></div><div class="field"><label>ST返利（元）</label><input name="amount" type="number" min="0.01" step="0.01" required></div><div class="field"><label>生效日期</label><input name="effective_date" type="date" required></div></div><div class="field"><label>备注（选填）</label><textarea name="note" maxlength="2000"></textarea></div><div class="actions"><button type="submit">保存ST返利</button><button type="button" class="secondary" id="cancel-st">取消</button></div></form></div><div class="tablewrap"><table><thead><tr><th>生效日期</th><th>版本 / 配置</th><th>ST返利</th><th>备注</th><th>录入人</th><th>录入时间</th><th>状态 / 操作</th></tr></thead><tbody id="st-rebates"></tbody></table></div><div id="empty-st" class="empty hidden">该商品暂无ST返利记录，不影响其他价格档案。</div></div>
-<div id="policy-panel" class="panel hidden">
-<div class="toolbar"><div><h2 id="policy-title">月度政策返利</h2><div class="muted">每次政策变化单独归档；支持同月多条政策及宣贯截图溯源</div></div><button id="new-policy-btn">新增政策返利</button></div>
-<div class="grid" style="margin:12px 0"><div class="field"><label>查看月份</label><input id="policy-month" type="month"></div><div class="field" style="justify-content:end"><button id="load-policy-btn" class="secondary">查询</button></div></div>
+<div id="st-form-panel" class="hidden"><form id="st-form" class="field"><div class="grid"><div class="field"><label>版本 / 配置</label><select name="variant" required><option value="">请先选择商品配置</option></select></div><div class="field"><label>ST返利（元）</label><input name="amount" type="number" min="0.01" step="0.01" required></div><div class="field"><label>生效日期</label><input name="effective_date" type="date" required></div></div><div class="field"><label>备注（选填）</label><textarea name="note" maxlength="2000"></textarea></div><div class="actions"><button type="submit">保存ST返利</button><button type="button" class="secondary" id="cancel-st">取消</button></div></form></div>
 <div id="policy-form-panel" class="hidden"><form id="policy-form" class="field"><div class="grid">
 <div class="field"><label>版本 / 配置</label><select name="variant" required><option value="">请先选择商品配置</option></select></div>
 <div class="field"><label>政策返利（元）</label><input name="policy_price" type="number" min="0.01" step="0.01" required></div>
@@ -292,6 +279,20 @@ main{padding:0 9px}
 <div class="field"><label>政策宣贯截图（可多选，JPG / PNG / WEBP，单张不超过 10MB）</label><input name="evidence" type="file" accept="image/jpeg,image/png,image/webp" multiple></div>
 <div class="field"><label>备注（选填）</label><textarea name="note" maxlength="2000"></textarea></div>
 <div class="actions"><button type="submit">保存政策返利</button><button type="button" class="secondary" id="cancel-policy">取消</button></div></form></div>
+</div>
+<div class="detail-col-side">
+<div class="detail-price"><div class="label">当前到手价</div><div id="detail-policy-price" class="amount">暂无报价</div></div>
+<div class="detail-metrics"><div class="detail-metric"><span>基础进价</span><strong id="detail-base">—</strong></div><div class="detail-metric"><span>ST返利</span><strong id="detail-rebate">—</strong></div></div>
+<div id="detail-official" class="official-reference"></div><div id="official-edit-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="official-price-input" type="number" min="0.01" step="0.01" placeholder="官网参考价（元）" style="flex:1"><input id="official-url-input" placeholder="官网链接（选填）" style="flex:1.4"><button id="official-price-save" type="button">保存</button></div>
+<div id="vmall-fetch-detail-row" class="hidden" style="display:flex;gap:6px;margin-top:6px"><input id="vmall-fetch-url-detail" placeholder="粘贴华为商城商品链接，采集配置/颜色/官网价" style="flex:2.4"><button id="vmall-fetch-detail-btn" type="button">采集</button></div>
+</div>
+</div>
+<div id="price-panel" class="panel hidden"><div class="toolbar"><div><h2 id="price-title">价格历史</h2><div class="muted">按生效日期倒序展示；新增记录不会覆盖旧价格</div></div></div><div class="grid" style="margin:12px 0"><div class="field"><label>开始日期</label><input id="price-start" type="date"></div><div class="field"><label>结束日期</label><input id="price-end" type="date"></div><div class="field"><label>按月查询</label><input id="price-month" type="month"></div><div class="field"><label>按年查询</label><input id="price-year" type="number" min="2000" max="2100" placeholder="例如 2026"></div><div class="field"><label>指定日期（查询当日及之前记录）</label><input id="price-asof" type="date"></div><div class="field" style="justify-content:end"><button id="filter-prices-btn" class="secondary">筛选历史</button><button id="clear-price-filter-btn" class="secondary">清除筛选</button></div></div>
+<div class="tablewrap"><table><thead><tr><th>生效日期</th><th>版本 / 配置</th><th>价格类型</th><th>价格</th><th>录入人</th><th>录入时间</th><th>状态 / 操作</th></tr></thead><tbody id="prices"></tbody></table></div><div id="empty-prices" class="empty hidden">该商品暂无价格记录。</div></div>
+<div id="st-panel" class="panel hidden"><div class="toolbar"><div><h2 id="st-title">ST返利档案</h2><div class="muted">仅有ST返利的机型需要录入；调整时新增记录，保留历史</div></div></div><div class="tablewrap"><table><thead><tr><th>生效日期</th><th>版本 / 配置</th><th>ST返利</th><th>备注</th><th>录入人</th><th>录入时间</th><th>状态 / 操作</th></tr></thead><tbody id="st-rebates"></tbody></table></div><div id="empty-st" class="empty hidden">该商品暂无ST返利记录，不影响其他价格档案。</div></div>
+<div id="policy-panel" class="panel hidden">
+<div class="toolbar"><div><h2 id="policy-title">月度政策返利</h2><div class="muted">每次政策变化单独归档；支持同月多条政策及宣贯截图溯源</div></div></div>
+<div class="grid" style="margin:12px 0"><div class="field"><label>查看月份</label><input id="policy-month" type="month"></div><div class="field" style="justify-content:end"><button id="load-policy-btn" class="secondary">查询</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>生效日期</th><th>版本 / 配置</th><th>政策返利</th><th>政策解读 / 备注</th><th>证据</th><th>录入人</th><th>录入时间</th><th>状态 / 操作</th></tr></thead><tbody id="policies"></tbody></table></div><div id="empty-policies" class="empty hidden">该月份暂无政策返利。</div>
 </div>
 <div id="admin-panel" class="panel hidden">
@@ -513,9 +514,11 @@ async function fillVariantSelect(selector, preferred){
  if(!rows.length){select.disabled=true;showMessage("该商品还没有登记配置，请先点击“新增配置”",true);return false}
  select.disabled=false;return true;
 }
-$("#detail-add-price").onclick=async()=>{if(!currentProduct)return;if(!await fillVariantSelect("#price-form [name=variant]",selectedVariant))return;$("#product-detail").classList.add("hidden");await openPrices(currentProduct);$("#price-form-panel").classList.remove("hidden")};
-$("#detail-add-rebate").onclick=async()=>{if(!currentProduct)return;if(!await fillVariantSelect("#st-form [name=variant]",selectedVariant))return;$("#product-detail").classList.add("hidden");await openST(currentProduct);$("#st-form-panel").classList.remove("hidden")};
-$("#detail-add-policy").onclick=async()=>{if(!currentProduct)return;if(!await fillVariantSelect("#policy-form [name=variant]",selectedVariant))return;$("#product-detail").classList.add("hidden");await openPolicies(currentProduct);$("#policy-form-panel").classList.remove("hidden")};
+function fillVariantSelectSync(sel,preferred){sel.replaceChildren(new Option("请选择配置",""));(detailCache.registeredVariants||[]).forEach(v=>sel.add(new Option(v.display_name,v.display_name)));if(preferred&&[...sel.options].some(o=>o.value===preferred))sel.value=preferred;sel.disabled=sel.options.length<=1;return sel.options.length>1}
+function toggleInlineForm(panelId,formId){if(!currentProduct)return;const p=$(panelId);const opening=p.classList.contains("hidden");["price-form-panel","st-form-panel","policy-form-panel"].forEach(id=>{if(id!==panelId)$("#"+id).classList.add("hidden")});p.classList.toggle("hidden",!opening);if(opening){const sel=$("#"+formId).querySelector("[name=variant]");const ok=fillVariantSelectSync(sel,selectedVariant);if(!ok)showMessage("该商品还没有登记配置，请先点击“新增配置”",true);p.scrollIntoView({behavior:"smooth",block:"center"})}}
+$("#detail-add-price").onclick=()=>toggleInlineForm("#price-form-panel","#price-form");
+$("#detail-add-rebate").onclick=()=>toggleInlineForm("#st-form-panel","#st-form");
+$("#detail-add-policy").onclick=()=>toggleInlineForm("#policy-form-panel","#policy-form");
 $("#product-search").addEventListener("input",renderProductCards);$("#brand-filter").addEventListener("change",renderProductCards);
 
 async function openPrices(p){currentProduct=p;$("#policy-panel").classList.add("hidden");$("#price-title").textContent=p.brand+" "+p.model+" · 价格历史";$("#price-panel").classList.remove("hidden");$("#price-form-panel").classList.add("hidden");await loadPrices();$("#price-panel").scrollIntoView({behavior:"smooth",block:"start"})}
@@ -565,7 +568,7 @@ $("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admi
  catch(e){showMessage(e.message,true)}};
 $("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
 $("#nav-checkup").onclick=()=>{window.open("https://j.yyzs.de/checkup/","_blank")};
-$("#nav-intel").onclick=()=>{window.open("https://j.yyzs.de/intel/","_blank")};
+
 function renderVmallMatrix(){
 
  const box=$("#vmall-matrix-box"),grid=$("#vmall-matrix"),cwrap=$("#vmall-colors");
@@ -687,20 +690,20 @@ $("#product-form").addEventListener("submit",async e=>{e.preventDefault();const 
   pendingVmall=null}
  form.reset();$("#product-form-panel").classList.add("hidden");await loadProducts();
  showMessage(added?("商品已保存，自动添加 "+added+" 项配置/颜色（重复跳过）"):"商品已保存")}
-catch(err){showMessage(err.message,true)}});$("#new-st-btn").onclick=()=>$("#st-form-panel").classList.toggle("hidden");
+catch(err){showMessage(err.message,true)}});
 $("#cancel-st").onclick=()=>$("#st-form-panel").classList.add("hidden");
-$("#st-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{await api("/products/"+currentProduct.id+"/st-rebates",{method:"POST",body:JSON.stringify({variant:f.get("variant"),amount:f.get("amount"),effective_date:f.get("effective_date"),note:f.get("note")||null})});form.reset();$("#st-form-panel").classList.add("hidden");await loadST();showMessage("ST返利记录已保存")}catch(err){showMessage(err.message,true)}});
-$("#new-policy-btn").onclick=()=>$("#policy-form-panel").classList.toggle("hidden");
+$("#st-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{await api("/products/"+currentProduct.id+"/st-rebates",{method:"POST",body:JSON.stringify({variant:f.get("variant"),amount:f.get("amount"),effective_date:f.get("effective_date"),note:f.get("note")||null})});form.reset();$("#st-form-panel").classList.add("hidden");await openProductDetail(currentProduct);await loadProducts();showMessage("ST返利记录已保存")}catch(err){showMessage(err.message,true)}});
+
 $("#cancel-policy").onclick=()=>$("#policy-form-panel").classList.add("hidden");
 $("#load-policy-btn").onclick=()=>loadPolicies().catch(e=>showMessage(e.message,true));
-$("#policy-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{const created=await api("/policies",{method:"POST",body:JSON.stringify({product_id:currentProduct.id,variant:f.get("variant"),effective_date:f.get("effective_date"),policy_price:f.get("policy_price"),interpretation:f.get("interpretation"),note:f.get("note")||null})});const files=f.getAll("evidence").filter(x=>x&&x.size);for(const file of files){const fd=new FormData();fd.append("file",file);const headers={};if(token)headers.Authorization="Bearer "+token;const res=await fetch("/api/policies/"+created.id+"/evidence",{method:"POST",headers,body:fd});if(!res.ok){const data=await res.json().catch(()=>({detail:"截图上传失败"}));throw new Error(data.detail||"截图上传失败")}}form.reset();$("#policy-form-panel").classList.add("hidden");await loadPolicies();showMessage("政策记录及证据已保存")}catch(err){showMessage(err.message,true)}});
+$("#policy-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{const created=await api("/policies",{method:"POST",body:JSON.stringify({product_id:currentProduct.id,variant:f.get("variant"),effective_date:f.get("effective_date"),policy_price:f.get("policy_price"),interpretation:f.get("interpretation"),note:f.get("note")||null})});const files=f.getAll("evidence").filter(x=>x&&x.size);for(const file of files){const fd=new FormData();fd.append("file",file);const headers={};if(token)headers.Authorization="Bearer "+token;const res=await fetch("/api/policies/"+created.id+"/evidence",{method:"POST",headers,body:fd});if(!res.ok){const data=await res.json().catch(()=>({detail:"截图上传失败"}));throw new Error(data.detail||"截图上传失败")}}form.reset();$("#policy-form-panel").classList.add("hidden");await openProductDetail(currentProduct);await loadProducts();showMessage("政策记录及证据已保存")}catch(err){showMessage(err.message,true)}});
 $("#filter-prices-btn").onclick=()=>loadPrices().catch(e=>showMessage(e.message,true));
 $("#clear-price-filter-btn").onclick=()=>{$("#price-start").value="";$("#price-end").value="";$("#price-asof").value="";$("#price-month").value="";$("#price-year").value="";loadPrices().catch(e=>showMessage(e.message,true))};
 function clearOtherPriceFilters(keep){["price-start","price-end","price-asof","price-month","price-year"].filter(id=>id!==keep).forEach(id=>$("#"+id).value="")}
 ["price-asof","price-month","price-year","price-start","price-end"].forEach(id=>$("#"+id).onchange=()=>{if($("#"+id).value){if(id==="price-start"||id==="price-end"){clearOtherPriceFilters(id==="price-start"?"price-start":"price-end")}else clearOtherPriceFilters(id)}});
-$("#new-price-btn").onclick=()=>$("#price-form-panel").classList.toggle("hidden");
+
 $("#cancel-price").onclick=()=>$("#price-form-panel").classList.add("hidden");
-$("#price-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{await api("/products/"+currentProduct.id+"/prices",{method:"POST",body:JSON.stringify({variant:f.get("variant"),price_type:f.get("price_type"),price:f.get("price"),effective_date:f.get("effective_date"),note:f.get("note")||null})});form.reset();$("#price-form-panel").classList.add("hidden");await loadPrices()}catch(err){showMessage(err.message,true)}});
+$("#price-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,f=new FormData(form);try{await api("/products/"+currentProduct.id+"/prices",{method:"POST",body:JSON.stringify({variant:f.get("variant"),price_type:f.get("price_type"),price:f.get("price"),effective_date:f.get("effective_date"),note:f.get("note")||null})});form.reset();$("#price-form-panel").classList.add("hidden");await openProductDetail(currentProduct);await loadProducts();showMessage("价格记录已保存")}catch(err){showMessage(err.message,true)}});
 if(token){enter().catch(e=>{$("#login").classList.remove("hidden");$("#app").classList.add("hidden");showMessage("加载失败："+(e&&e.message||"未知错误")+"，请刷新重试",true)})}else{$("#login").classList.remove("hidden")}
 })();
 </script>
