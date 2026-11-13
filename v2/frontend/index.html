@@ -210,7 +210,7 @@ main{padding:0 9px}
 </style>
 </head>
 <body>
-<header><strong>手机报价档案系统</strong><nav id="main-nav" class="hidden" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="secondary" data-nav="products" type="button">商品档案</button><button class="secondary" data-nav="overview" type="button">价格总览</button><button class="secondary" id="nav-admin" data-nav="admin" type="button">成员管理</button></nav><div class="actions"><button class="secondary" id="nav-checkup" type="button">情报中心</button><button class="secondary" id="language-toggle" type="button">中文 / English</button><div id="userline" class="userline hidden"><span id="identity"></span><button class="secondary" id="logout">退出登录</button></div></div></header>
+<header><strong>手机报价档案系统</strong><nav id="main-nav" class="hidden" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="secondary" data-nav="products" type="button">商品档案</button><button class="secondary" data-nav="overview" type="button">价格总览</button><button class="secondary" id="nav-admin" data-nav="admin" type="button">成员管理</button></nav><div class="actions"><button class="secondary" id="nav-intel" type="button">新机情报</button><button class="secondary" id="language-toggle" type="button">中文 / English</button><div id="userline" class="userline hidden"><span id="identity"></span><button class="secondary" id="logout">退出登录</button></div></div></header>
 <main>
 <section id="login" class="hidden">
 <div class="login-hero">
@@ -567,7 +567,7 @@ $("#official-price-save").onclick=async()=>{if(!currentProduct||me?.role!=="admi
 
  catch(e){showMessage(e.message,true)}};
 $("#vmall-search-btn").onclick=()=>{const m=$("#product-form").querySelector('[name="model"]').value.trim();const known=$("#product-form").querySelector('[name="official_url"]').value.trim();if(!m&&known){window.open(known,"_blank");return}if(!m){showMessage("先填写型号，或直接粘贴商品链接后点采集",true);return}window.open("https://www.vmall.com/portal/search/index.html?searchWord="+encodeURIComponent(m),"_blank")};
-$("#nav-checkup").onclick=()=>{window.open("https://j.yyzs.de/checkup/","_blank")};
+$("#nav-intel").onclick=()=>{window.open("https://j.yyzs.de/intel/","_blank")};
 
 function renderVmallMatrix(){
 
