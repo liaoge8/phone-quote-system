@@ -35,7 +35,7 @@ button.secondary:hover{background:rgba(124,146,255,.13);border-color:var(--brand
 button.danger{background:rgba(255,93,122,.10);color:var(--danger);border:1px solid rgba(255,93,122,.35);box-shadow:none}
 button.danger:hover{background:rgba(255,93,122,.2);filter:none}
 button:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
-header{position:sticky;top:0;z-index:40;background:linear-gradient(120deg,#070a16 0%,#0c1230 78%,#141a44 100%);color:#fff;padding:14px max(16px,calc((100vw - 1240px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 16px rgba(0,0,0,.5);border-bottom:1px solid rgba(124,146,255,.18)}
+header{position:relative;z-index:40;background:linear-gradient(120deg,#070a16 0%,#0c1230 78%,#141a44 100%);color:#fff;padding:14px max(16px,calc((100vw - 1240px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 16px rgba(0,0,0,.5);border-bottom:1px solid rgba(124,146,255,.18)}
 header strong{font-size:16px;font-weight:700;letter-spacing:.01em;display:flex;align-items:center;gap:9px}
 header strong::before{content:"";width:8px;height:22px;border-radius:3px;background:var(--grad);background-size:180% 180%;box-shadow:0 0 10px rgba(139,92,246,.6);animation:gradShift 6s ease infinite;flex:0 0 auto}
 header button{padding:7px 12px;font-size:12px;background:rgba(255,255,255,.07);color:#d5defc;border:1px solid rgba(124,146,255,.25);box-shadow:none;animation:none}
@@ -144,11 +144,13 @@ body.print-overview th,body.print-overview td{padding:6px 5px}}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:12px}
 body{font-size:14px}
 .grid{grid-template-columns:minmax(0,1fr);gap:12px}
-header{align-items:stretch;flex-direction:column;gap:10px;padding:12px 14px}
+header{align-items:stretch;flex-direction:column;gap:8px;padding:10px 12px}
 header strong{font-size:15px}
-header>.actions{width:100%;justify-content:space-between;align-items:center;flex-wrap:wrap}
-.userline{width:auto;flex:1;justify-content:flex-end;flex-wrap:wrap}
-#language-toggle{flex:0 0 auto;padding:8px 10px;font-size:12px}
+#main-nav{width:100%;justify-content:center;gap:8px}
+header>.actions{width:100%;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px}
+.userline{width:auto;justify-content:center;flex-wrap:wrap;gap:7px}
+header button{padding:6px 9px;font-size:11px}
+#language-toggle{flex:0 0 auto;padding:6px 9px;font-size:11px}
 main{width:100%;margin:14px auto;padding:0 12px}
 .panel{padding:15px;margin-bottom:13px;border-radius:14px}
 h1{font-size:20px}h2{font-size:15px;margin-bottom:12px}
