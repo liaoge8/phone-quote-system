@@ -525,7 +525,7 @@ async function fillVariantSelect(selector, preferred){
  select.disabled=false;return true;
 }
 function fillVariantSelectSync(sel,preferred){sel.replaceChildren(new Option("请选择配置",""));(detailCache.registeredVariants||[]).forEach(v=>sel.add(new Option(v.display_name,v.display_name)));if(preferred&&[...sel.options].some(o=>o.value===preferred))sel.value=preferred;sel.disabled=sel.options.length<=1;return sel.options.length>1}
-function toggleInlineForm(panelId,formId){if(!currentProduct)return;const p=$(panelId);const opening=p.classList.contains("hidden");["price-form-panel","st-form-panel","policy-form-panel"].forEach(id=>{if(id!==panelId)$("#"+id).classList.add("hidden")});p.classList.toggle("hidden",!opening);if(opening){const sel=$("#"+formId).querySelector("[name=variant]");const ok=fillVariantSelectSync(sel,selectedVariant);if(!ok)showMessage("该商品还没有登记配置，请先点击“新增配置”",true);p.scrollIntoView({behavior:"smooth",block:"center"})}}
+function toggleInlineForm(panelId,formId){if(!currentProduct)return;const p=$(panelId);const opening=p.classList.contains("hidden");["price-form-panel","st-form-panel","policy-form-panel"].forEach(id=>{if(id!==panelId)$("#"+id).classList.add("hidden")});p.classList.toggle("hidden",!opening);if(opening){const sel=$(formId).querySelector("[name=variant]");const ok=fillVariantSelectSync(sel,selectedVariant);if(!ok)showMessage("该商品还没有登记配置，请先点击“新增配置”",true);p.scrollIntoView({behavior:"smooth",block:"center"})}}
 $("#detail-add-price").onclick=()=>toggleInlineForm("#price-form-panel","#price-form");
 $("#detail-add-rebate").onclick=()=>toggleInlineForm("#st-form-panel","#st-form");
 $("#detail-add-policy").onclick=()=>toggleInlineForm("#policy-form-panel","#policy-form");
